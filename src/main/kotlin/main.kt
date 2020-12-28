@@ -18,7 +18,11 @@ fun main(args: Array<String>) {
         val bucketPath: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tag: String by option(ArgType.String, shortName = "t", description = "Tag").required() // defaultでlatestにしたいがやり方がわからない
-        override fun execute() { }
+        override fun execute() {
+            // Download
+            val storage = Storage(bucketPath)
+            storage.download(path, key, tag)
+        }
     }
     val storeCommand = StoreCommand()
     val getCommand = GetCommand()
