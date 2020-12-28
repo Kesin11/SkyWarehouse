@@ -7,7 +7,11 @@ fun main(args: Array<String>) {
         val bucketPath: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tags: List<String> by option(ArgType.String, shortName = "t", description = "Tags").multiple() // defaultでlatestにしたいがやり方がわからない
-        override fun execute() { }
+        override fun execute() {
+            // Upload
+            val storage = Storage(bucketPath)
+            storage.store(path, key, tags)
+        }
     }
     class GetCommand: Subcommand("get", "Get subcommand") {
         val path: String by argument(ArgType.String, description = "Path")
@@ -20,8 +24,4 @@ fun main(args: Array<String>) {
     val getCommand = GetCommand()
     parser.subcommands(storeCommand, getCommand)
     parser.parse(args)
-
-    // アップロード
-    val storage = Storage(storeCommand.bucketPath)
-    storage.store(storeCommand.path, storeCommand.key, storeCommand.tags)
 }
