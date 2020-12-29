@@ -15,7 +15,7 @@ fun main(args: Array<String>) {
         }
     }
     class GetCommand: Subcommand("get", "Get subcommand") {
-        val path: String by argument(ArgType.String, description = "Path")
+        val path: String by argument(ArgType.String, description = "Download destination path")
         val bucketPath: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tag: String by option(ArgType.String, shortName = "t", description = "Tag").required() // defaultでlatestにしたいがやり方がわからない

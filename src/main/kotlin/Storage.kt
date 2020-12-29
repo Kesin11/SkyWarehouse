@@ -21,17 +21,18 @@ class Storage(bucketPath: String) {
         storeIndex(blobs, key, tags)
     }
 
-    // TODO: 複数ファイル対応
     fun download(localPath: String, key: String, tag: String): Unit {
-        val remotePath = fetchIndex(key, tag)
-        downloadBlobs(remotePath, localPath)
+        val content = fetchIndex(key, tag)
+        val remotePaths = content.split("\n")
+
+        downloadBlobs(remotePaths, localPath)
     }
 
     private fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
-        val remotePath = blobs.map { it.name }.joinToString(separator = "\n")
+        val content = blobs.map { it.name }.joinToString(separator = "\n")
         val indexPaths = tags.map { "skw_index/$key/$it" }
         indexPaths.forEach {
-            bucket.create(it, remotePath.toByteArray())
+            bucket.create(it, content.toByteArray())
         }
     }
 
@@ -86,11 +87,14 @@ class Storage(bucketPath: String) {
         return filePath.toList().joinToString(separator = "/")
     }
 
-    private fun downloadBlobs(remotePath: String, localPathPrefix: String): Unit {
-        val blob = bucket.get(remotePath)
-        val localPath = Paths.get(localPathPrefix, remotePath).normalize()
+    private fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String) {
+        return remotePaths.forEach { remotePath ->
+            val blob = bucket.get(remotePath)
+            val localPath = Paths.get(localPathPrefix, remotePath).normalize()
+            println(localPath)
 
-        Files.createDirectories(localPath.parent)
-        blob.downloadTo(localPath)
+            Files.createDirectories(localPath.parent)
+            blob.downloadTo(localPath)
+        }
     }
 }
