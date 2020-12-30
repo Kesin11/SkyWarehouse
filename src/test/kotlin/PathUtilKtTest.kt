@@ -3,6 +3,8 @@ import org.junit.jupiter.api.Assertions.*
 import java.nio.file.Path
 import java.nio.file.Paths
 import io.mockk.*
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 
 internal class PathUtilKtTest {
 
@@ -26,6 +28,7 @@ internal class PathUtilKtTest {
         }
 
         @Test
+        @EnabledOnOs(OS.WINDOWS)
         fun windowsPaths() {
             val actual = resolvePathsOrGlob(listOf("sample\\foo.kt", "sample\\bar.kt"))
             assertEquals(listOf(
