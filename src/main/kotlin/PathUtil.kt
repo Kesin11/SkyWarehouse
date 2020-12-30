@@ -3,6 +3,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
+import java.util.stream.Stream
+
+fun filesWalk(rootDir: Path): Stream<Path> {
+    return Files.walk(rootDir)
+}
 
 // パスの配列かglobの1パターンをList<Path>に正規化する
 // CLIのオプションにファイルパスを渡す場合、"*"などのワイルドカードはシェルがパスを複数の引数に展開してくる
@@ -19,7 +24,7 @@ fun resolvePathsOrGlob(pathsOrGlob: List<String>): List<Path> {
     val rootDirPath = globRootDirPath(glob)
 
     val matcher = FileSystems.getDefault().getPathMatcher("glob:$glob")
-    return Files.walk(rootDirPath)
+    return filesWalk(rootDirPath)
         .filter(matcher::matches)
         .collect(Collectors.toList())
         .toList()

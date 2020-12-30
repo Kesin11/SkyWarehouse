@@ -1,7 +1,8 @@
 import org.junit.jupiter.api.*
-
 import org.junit.jupiter.api.Assertions.*
+import java.nio.file.Path
 import java.nio.file.Paths
+import io.mockk.*
 
 internal class PathUtilKtTest {
 
@@ -24,7 +25,46 @@ internal class PathUtilKtTest {
             ), actual)
         }
 
-        // TODO: globのケースはFile.walkをmockする
+        @Test
+        fun windowsPaths() {
+            val actual = resolvePathsOrGlob(listOf("sample\\foo.kt", "sample\\bar.kt"))
+            assertEquals(listOf(
+                Paths.get("sample", "foo.kt"),
+                Paths.get("sample", "bar.kt")
+            ), actual)
+        }
+
+        @Test
+        fun globMatch() {
+            val rootDirPath = Paths.get(".")
+            mockkStatic(::filesWalk)
+            every { filesWalk(rootDirPath) } returns listOf(
+                Paths.get("sample", "foo.kt"),
+                Paths.get("sample", "bar.kt"),
+                Paths.get("sample", "bar.java")
+            ).stream()
+
+            val actual = resolvePathsOrGlob(listOf("**/*.kt"))
+            assertEquals(listOf(
+                Paths.get("sample", "foo.kt"),
+                Paths.get("sample", "bar.kt")
+            ), actual)
+        }
+
+        @Test
+        fun globMatchNoting() {
+            val rootDirPath = Paths.get(".")
+            mockkStatic(::filesWalk)
+            every { filesWalk(rootDirPath) } returns listOf(
+                Paths.get("sample", "foo.kt"),
+                Paths.get("sample", "bar.kt"),
+                Paths.get("sample", "bar.java")
+            ).stream()
+
+            val actual = resolvePathsOrGlob(listOf("**/noting"))
+            assertEquals(listOf<Path>(), actual)
+        }
+
         // TODO: globが複数の場合はエラーにする
     }
 
