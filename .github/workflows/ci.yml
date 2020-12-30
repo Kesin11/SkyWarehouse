@@ -31,7 +31,9 @@ jobs:
       with:
         name: jars
         path: build/libs
+      if: always()
     - uses: actions/upload-artifact@v2
       with:
         name: test result
         path: build/test-results/test/*.xml
+      if: always()
