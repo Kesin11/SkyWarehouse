@@ -48,6 +48,13 @@ tasks.withType<Jar> {
     }
 }
 
+tasks.withType<Test> {
+    this.testLogging {
+        this.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        this.showStackTraces = false
+    }
+}
+
 application {
     mainClassName = "MainKt"
 }
