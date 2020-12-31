@@ -13,12 +13,12 @@ class Storage(bucketPath: String) {
         bucket = storage.get(bucketPath) ?: error("Bucket $bucketPath does not exist.")
     }
 
-    // TODO: result型を返したい
     fun store(pathsOrGlob: List<String>, key: String, tags: List<String>) {
         val blobs = storeBlobs(pathsOrGlob)
         storeIndex(blobs, key, tags)
     }
 
+    // TODO: ダウンロードしたファイル一覧を返す
     fun download(localPath: String, key: String, tag: String): Unit {
         val content = fetchIndex(key, tag)
         val remotePaths = content.split("\n")

@@ -20,7 +20,7 @@ fun resolvePathsOrGlob(pathsOrGlob: List<String>): List<Path> {
     }
 
     if (pathsOrGlob.size > 1) {
-        throw IllegalArgumentException("Multiple grobs does not supported")
+        throw IllegalArgumentException("Multiple grobs does not supported.")
     }
 
     // 引数がglobの文字列として解釈されたケース
