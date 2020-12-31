@@ -5,6 +5,7 @@ import java.nio.file.Paths
 import io.mockk.*
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
+import kotlin.IllegalArgumentException
 
 internal class PathUtilKtTest {
 
@@ -68,7 +69,20 @@ internal class PathUtilKtTest {
             assertEquals(listOf<Path>(), actual)
         }
 
-        // TODO: globが複数の場合はエラーにする
+        @Test
+        fun globMultiThrowsError() {
+            val rootDirPath = Paths.get(".")
+            mockkStatic(::filesWalk)
+            every { filesWalk(rootDirPath) } returns listOf(
+                Paths.get("sample", "foo.kt"),
+                Paths.get("sample", "bar.kt"),
+                Paths.get("sample", "bar.java")
+            ).stream()
+
+            assertThrows<IllegalArgumentException>("Multiple globs does not supported") {
+                resolvePathsOrGlob(listOf("**/first", "**/second"))
+            }
+        }
     }
 
     @Nested

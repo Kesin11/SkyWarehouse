@@ -15,8 +15,12 @@ fun filesWalk(rootDir: Path): Stream<Path> {
 // この違いを吸収する
 fun resolvePathsOrGlob(pathsOrGlob: List<String>): List<Path> {
     // シェルがパスを展開したケース
-    if (pathsOrGlob.size > 1) {
+    if (pathsOrGlob.size > 1 && pathsOrGlob.none { it.contains("*") }) {
         return pathsOrGlob.map { Paths.get(it).normalize() }
+    }
+
+    if (pathsOrGlob.size > 1) {
+        throw IllegalArgumentException("Multiple grobs does not supported")
     }
 
     // 引数がglobの文字列として解釈されたケース
