@@ -46,6 +46,7 @@ tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "MainKt"
     }
+    archiveFileName.set("skw.jar")
 }
 
 tasks.withType<Test> {
