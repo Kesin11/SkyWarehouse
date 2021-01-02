@@ -37,3 +37,12 @@ jobs:
         name: test result
         path: build/test-results/test/*.xml
       if: always()
+
+  integrate_test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
