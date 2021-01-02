@@ -41,7 +41,10 @@ jobs:
   integrate_test:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: service.json
     steps:
+      # Prepare
       - name: Decrypt service account json
         env:
           GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
@@ -53,9 +56,24 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: jars
-      - name: ls
-        run: ls
-      - name: lsls
-        run: ls **
-      - name: skw
-        run: java -jar skw.jar --help
+      
+      # Integrate test
+      - run: |
+          mkdir github_actions
+          echo ${{ github.sha }} > github_actions/${{ github.run_number }}.txt
+      - name: store
+        run: |
+          java -jar skw.jar store \
+            -b "kesin11_bazel_cache" \
+            -k "github_actions" \
+            -t "${{ github.sha }}" -t "latest" \
+            ./github_actions/*
+      - name: get
+        run: |
+          java -jar skw.jar get \
+            -b "kesin11_bazel_cache" \
+            -k "github_actions" \
+            -t "${{ github.sha }}" \
+            ./down
+      - name: list got files
+        run: ls down
