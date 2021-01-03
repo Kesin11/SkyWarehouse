@@ -59,15 +59,23 @@ jobs:
       
       # Integrate test
       - run: |
-          mkdir github_actions
+          mkdir -p github_actions/glob
           echo ${{ github.sha }} > github_actions/${{ github.run_number }}.txt
-      - name: store
+          echo ${{ github.sha }} > github_actions/glob/${{ github.run_number }}.txt
+      - name: store wildcard paths
         run: |
           java -jar skw.jar store \
             -b "kesin11_bazel_cache" \
             -k "github_actions" \
             -t "${{ github.sha }}" -t "latest" \
-            ./github_actions/*
+            ./github_actions/*.txt
+      - name: store glob paths
+        run: |
+          java -jar skw.jar store \
+            -b "kesin11_bazel_cache" \
+            -k "github_actions" \
+            -t "${{ github.sha }}" -t "latest" \
+            ./github_actions/**/*.txt
       - name: get
         run: |
           java -jar skw.jar get \
@@ -76,4 +84,4 @@ jobs:
             -t "${{ github.sha }}" \
             ./down
       - name: list got files
-        run: ls down
+        run: ls down/**

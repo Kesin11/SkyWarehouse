@@ -14,8 +14,11 @@ fun filesWalk(rootDir: Path): Stream<Path> {
 // "**/*"などシェルが展開できなかった場合は単純に文字列となる
 // この違いを吸収する
 fun resolvePathsOrGlob(pathsOrGlob: List<String>): List<Path> {
+    if (pathsOrGlob.isEmpty()) {
+        throw IllegalArgumentException("Path or glob is empty.")
+    }
     // シェルがパスを展開したケース
-    if (pathsOrGlob.size > 1 && pathsOrGlob.none { it.contains("*") }) {
+    else if (pathsOrGlob.none { it.contains("*") }) {
         return pathsOrGlob.map { Paths.get(it).normalize() }
     }
 
