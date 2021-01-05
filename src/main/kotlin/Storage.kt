@@ -42,6 +42,7 @@ class Storage(bucketPath: String) {
 
     private fun storeBlobs(pathsOrGlob: List<String>): List<Blob> {
         val paths = resolvePathsOrGlob(pathsOrGlob)
+            .filter { p -> p.toFile().isFile }
         println(paths.map { it.toString() })
         // TODO: 1つもマッチしなかった場合はエラーを出しておく
         return paths.map { localPath ->
