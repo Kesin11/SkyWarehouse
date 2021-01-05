@@ -5,17 +5,18 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class Storage(bucketPath: String) {
+class Storage(BucketName: String) {
     private var bucket: Bucket
 
     init {
         val storage = StorageOptions.getDefaultInstance().service
-        bucket = storage.get(bucketPath) ?: error("Bucket $bucketPath does not exist.")
+        bucket = storage.get(BucketName) ?: error("Bucket $BucketName does not exist.")
     }
 
-    fun store(pathsOrGlob: List<String>, key: String, tags: List<String>) {
-        val blobs = storeBlobs(pathsOrGlob)
+    fun store(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
+        val blobs = storeBlobs(pathsOrGlob, prefixPath)
         storeIndex(blobs, key, tags)
+        return blobs
     }
 
     // TODO: ダウンロードしたファイル一覧を返す
@@ -40,26 +41,27 @@ class Storage(bucketPath: String) {
         return String(blob.getContent())
     }
 
-    private fun storeBlobs(pathsOrGlob: List<String>): List<Blob> {
+    private fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
         val paths = resolvePathsOrGlob(pathsOrGlob)
             .filter { p -> p.toFile().isFile }
-
         if (paths.isEmpty()) {
             throw IllegalArgumentException("None of files are matched by paths or glob")
         }
-        println(paths.map { it.toString() })
+        println("Try to upload local files: ${paths.map { it.toString() }}")
+
         return paths.map { localPath ->
-            val blobName = toBlobName(localPath)
+            val blobName = toBlobName(localPath, prefixPath)
             val blobInputStream = Files.newInputStream(localPath)
             return@map bucket.create(blobName, blobInputStream)
         }
     }
 
     // ./sample/text.txt -> sample/text.txtのようにGCS上のパスに合うように変換する
-    private fun toBlobName(localPath: Path): String {
-        val filePath = localPath.normalize()
-        // Windowsでのバックスラッシュを変換するために手動でjoinする
-        return filePath.toList().joinToString(separator = "/")
+    private fun toBlobName(localPath: Path, prefixPath: String?): String {
+        val prefix = Paths.get(prefixPath ?: ".")
+        val remotePath = prefix.resolve(localPath).normalize()
+        // NOTE: WindowsでパスがバックスラッシュにならないようにStringでjoinする
+        return remotePath.toList().joinToString(separator = "/")
     }
 
     private fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String) {
