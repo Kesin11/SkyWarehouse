@@ -42,8 +42,12 @@ class Storage(bucketPath: String) {
 
     private fun storeBlobs(pathsOrGlob: List<String>): List<Blob> {
         val paths = resolvePathsOrGlob(pathsOrGlob)
+            .filter { p -> p.toFile().isFile }
+
+        if (paths.isEmpty()) {
+            throw IllegalArgumentException("None of files are matched by paths or glob")
+        }
         println(paths.map { it.toString() })
-        // TODO: 1つもマッチしなかった場合はエラーを出しておく
         return paths.map { localPath ->
             val blobName = toBlobName(localPath)
             val blobInputStream = Files.newInputStream(localPath)
