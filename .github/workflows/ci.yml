@@ -24,7 +24,7 @@ jobs:
     
     # Execute
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew build --profile
     
     # Post
     - uses: actions/upload-artifact@v2
@@ -34,8 +34,10 @@ jobs:
       if: always()
     - uses: actions/upload-artifact@v2
       with:
-        name: test result
-        path: build/test-results/test/*.xml
+        name: reports
+        path: |
+          build/test-results/test/*.xml
+          build/reports/
       if: always()
 
   integrate_test:
