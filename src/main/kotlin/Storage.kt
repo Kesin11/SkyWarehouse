@@ -5,12 +5,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class Storage(bucketPath: String) {
+class Storage(BucketName: String) {
     private var bucket: Bucket
 
     init {
         val storage = StorageOptions.getDefaultInstance().service
-        bucket = storage.get(bucketPath) ?: error("Bucket $bucketPath does not exist.")
+        bucket = storage.get(BucketName) ?: error("Bucket $BucketName does not exist.")
     }
 
     fun store(pathsOrGlob: List<String>, key: String, tags: List<String>) {

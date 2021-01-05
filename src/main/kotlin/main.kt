@@ -4,13 +4,13 @@ fun main(args: Array<String>) {
     val parser = ArgParser("skw")
     class StoreCommand: Subcommand("store", "Store subcommand") {
         val pathsOrGlob: List<String> by argument(ArgType.String, description = "Paths or file glob").multiple(10000)
-        val bucketPath: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+        val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tags: List<String> by option(ArgType.String, shortName = "t", description = "Tags").multiple() // defaultでlatestにしたいがやり方がわからない
         override fun execute() {
             // Upload
             runCatching {
-                val storage = Storage(bucketPath)
+                val storage = Storage(bucketName)
                 storage.store(pathsOrGlob, key, tags)
             }.onSuccess {
                 println("Success upload $pathsOrGlob")
@@ -23,13 +23,13 @@ fun main(args: Array<String>) {
     }
     class GetCommand: Subcommand("get", "Get subcommand") {
         val path: String by argument(ArgType.String, description = "Download destination path")
-        val bucketPath: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+        val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tag: String by option(ArgType.String, shortName = "t", description = "Tag").required() // defaultでlatestにしたいがやり方がわからない
         override fun execute() {
             // Download
             runCatching {
-                val storage = Storage(bucketPath)
+                val storage = Storage(bucketName)
                 storage.download(path, key, tag)
             }.onSuccess {
                 println("Success download key: $key, tag: $tag")
