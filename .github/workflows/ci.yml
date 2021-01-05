@@ -61,9 +61,9 @@ jobs:
       
       # Integrate test
       - run: |
-          mkdir -p github_actions/glob
+          mkdir -p github_actions/nest
           echo ${{ github.sha }} > github_actions/${{ github.run_number }}.txt
-          echo ${{ github.sha }} > github_actions/glob/${{ github.run_number }}.txt
+          echo ${{ github.sha }} > github_actions/nest/${{ github.run_number }}.txt
       - name: store wildcard paths
         run: |
           java -jar skw.jar store \
@@ -108,13 +108,11 @@ jobs:
           name: jars
 
       # Execute
-      - run: |
-          mkdir -p github_actions/dogfooding/${{ github.run_number }}
-          cp skw.jar github_actions/dogfooding/${{ github.run_number }}/
       - name: store own jar to GCS
         run: |
           java -jar skw.jar store \
             -b "kesin11_bazel_cache" \
             -k "dogfooding" \
             -t "${{ github.sha }}" -t "latest" \
-            ./github_actions/dogfooding/**/skw.jar
+            -p "dogfooding/${{ github.run_number }}" \
+            ./skw.jar
