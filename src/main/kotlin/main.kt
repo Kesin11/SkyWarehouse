@@ -7,13 +7,14 @@ fun main(args: Array<String>) {
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tags: List<String> by option(ArgType.String, shortName = "t", description = "Tags").multiple() // defaultでlatestにしたいがやり方がわからない
+        val prefix: String? by option(ArgType.String, shortName = "p", description = "Prefix path in GCS")
         override fun execute() {
             // Upload
             runCatching {
                 val storage = Storage(bucketName)
-                storage.store(pathsOrGlob, key, tags)
-            }.onSuccess {
-                println("Success upload $pathsOrGlob")
+                storage.store(pathsOrGlob, key, tags, prefix)
+            }.onSuccess { blobs ->
+                println("Success upload to remote: ${blobs.map { it.name }}")
             }.onFailure {
                 System.err.println("Failed upload $pathsOrGlob. Error:")
                 System.err.println(it)
