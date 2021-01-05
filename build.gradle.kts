@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     kotlin("jvm") version "1.4.21"
@@ -42,11 +43,16 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-tasks.withType<Jar> {
+// Disable default jar task and build only fat jar
+tasks.named("jar") {
+    enabled = false
+}
+tasks.named("shadowJar", ShadowJar::class.java) {
     manifest {
         attributes["Main-Class"] = "MainKt"
     }
     archiveFileName.set("skw.jar")
+    minimize()
 }
 
 tasks.withType<Test> {
