@@ -18,6 +18,7 @@ fun main(args: Array<String>) {
             }.onFailure {
                 System.err.println("Failed upload $pathsOrGlob. Error:")
                 System.err.println(it)
+                System.err.println(it.stackTraceToString())
                 kotlin.system.exitProcess(1)
             }
         }
@@ -32,11 +33,13 @@ fun main(args: Array<String>) {
             runCatching {
                 val storage = Storage(bucketName)
                 storage.download(path, key, tag)
-            }.onSuccess {
+            }.onSuccess { paths ->
                 println("Success download key: $key, tag: $tag")
+                println("Download to: ${paths.map { it.toString() }}")
             }.onFailure {
                 System.err.println("Failed downoad key: $key, tag: $tag, Error:")
                 System.err.println(it)
+                System.err.println(it.stackTraceToString())
                 kotlin.system.exitProcess(1)
             }
         }

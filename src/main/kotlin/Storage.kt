@@ -19,12 +19,11 @@ class Storage(BucketName: String) {
         return blobs
     }
 
-    // TODO: ダウンロードしたファイル一覧を返す
-    fun download(localPath: String, key: String, tag: String): Unit {
+    fun download(localPath: String, key: String, tag: String): List<Path> {
         val content = fetchIndex(key, tag)
         val remotePaths = content.split("\n")
 
-        downloadBlobs(remotePaths, localPath)
+        return downloadBlobs(remotePaths, localPath)
     }
 
     private fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
@@ -36,8 +35,8 @@ class Storage(BucketName: String) {
     }
 
     private fun fetchIndex(key: String, tag: String): String {
-        // TODO: 存在しなかった場合のエラーハンドリング
-        val blob = bucket.get("skw_index/$key/$tag")
+        val blob: Blob = bucket.get("skw_index/$key/$tag")
+            ?: throw IllegalArgumentException("Index file not found. key: $key, tag: $tag")
         return String(blob.getContent())
     }
 
@@ -64,14 +63,14 @@ class Storage(BucketName: String) {
         return remotePath.toList().joinToString(separator = "/")
     }
 
-    private fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String) {
-        return remotePaths.forEach { remotePath ->
+    private fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String): List<Path> {
+        return remotePaths.map { remotePath ->
             val blob = bucket.get(remotePath)
             val localPath = Paths.get(localPathPrefix, remotePath).normalize()
-            println(localPath)
 
             Files.createDirectories(localPath.parent)
             blob.downloadTo(localPath)
+            return@map localPath
         }
     }
 }
