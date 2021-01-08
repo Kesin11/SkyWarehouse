@@ -1,6 +1,7 @@
 import com.google.cloud.storage.Blob
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.StorageOptions
+import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -20,10 +21,12 @@ class Storage(BucketName: String) {
     }
 
     fun download(localPath: String, key: String, tag: String): List<Path> {
-        val content = fetchIndex(key, tag)
-        val remotePaths = content.split("\n")
+        return runBlocking {
+            val content = fetchIndex(key, tag)
+            val remotePaths = content.split("\n")
 
-        return downloadBlobs(remotePaths, localPath)
+            downloadBlobs(remotePaths, localPath)
+        }
     }
 
     private fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
@@ -34,8 +37,8 @@ class Storage(BucketName: String) {
         }
     }
 
-    private fun fetchIndex(key: String, tag: String): String {
-        val blob: Blob = bucket.get("skw_index/$key/$tag")
+    private suspend fun fetchIndex(key: String, tag: String): String {
+        val blob: Blob = withContext(Dispatchers.IO) { bucket.get("skw_index/$key/$tag") }
             ?: throw IllegalArgumentException("Index file not found. key: $key, tag: $tag")
         return String(blob.getContent())
     }
@@ -63,14 +66,20 @@ class Storage(BucketName: String) {
         return remotePath.toList().joinToString(separator = "/")
     }
 
-    private fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String): List<Path> {
-        return remotePaths.map { remotePath ->
-            val blob = bucket.get(remotePath)
-            val localPath = Paths.get(localPathPrefix, remotePath).normalize()
+    private suspend fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String): List<Path> {
+        return coroutineScope {
+            remotePaths.map { remotePath ->
+                async(Dispatchers.IO) {
+                    val blob = bucket.get(remotePath)
+                    val localPath = Paths.get(localPathPrefix, remotePath).normalize()
 
-            Files.createDirectories(localPath.parent)
-            blob.downloadTo(localPath)
-            return@map localPath
+                    println("$remotePath : Working in thread ${Thread.currentThread().name}")
+
+                    Files.createDirectories(localPath.parent)
+                    blob.downloadTo(localPath)
+                    localPath
+                }
+            }.awaitAll()
         }
     }
 }
