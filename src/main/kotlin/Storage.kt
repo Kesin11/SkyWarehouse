@@ -15,9 +15,11 @@ class Storage(BucketName: String) {
     }
 
     fun store(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
-        val blobs = storeBlobs(pathsOrGlob, prefixPath)
-        storeIndex(blobs, key, tags)
-        return blobs
+        return runBlocking {
+            val blobs = storeBlobs(pathsOrGlob, prefixPath)
+            storeIndex(blobs, key, tags)
+            blobs
+        }
     }
 
     fun download(localPath: String, key: String, tag: String): List<Path> {
@@ -29,11 +31,15 @@ class Storage(BucketName: String) {
         }
     }
 
-    private fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
-        val content = blobs.map { it.name }.joinToString(separator = "\n")
+    private suspend fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
+        val content = blobs.joinToString(separator = "\n") { it.name }
         val indexPaths = tags.map { "skw_index/$key/$it" }
-        indexPaths.forEach {
-            bucket.create(it, content.toByteArray())
+        return coroutineScope {
+            async(Dispatchers.IO) {
+                indexPaths.forEach {
+                    bucket.create(it, content.toByteArray())
+                }
+            }
         }
     }
 
@@ -43,7 +49,7 @@ class Storage(BucketName: String) {
         return String(blob.getContent())
     }
 
-    private fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
+    private suspend fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
         val paths = resolvePathsOrGlob(pathsOrGlob)
             .filter { p -> p.toFile().isFile }
         if (paths.isEmpty()) {
@@ -51,10 +57,17 @@ class Storage(BucketName: String) {
         }
         println("Try to upload local files: ${paths.map { it.toString() }}")
 
-        return paths.map { localPath ->
-            val blobName = toBlobName(localPath, prefixPath)
-            val blobInputStream = Files.newInputStream(localPath)
-            return@map bucket.create(blobName, blobInputStream)
+        return coroutineScope {
+            paths.map { localPath ->
+                async(Dispatchers.IO) {
+                    val blobName = toBlobName(localPath, prefixPath)
+                    val blobInputStream = Files.newInputStream(localPath)
+
+                    println("$blobName : Working in thread ${Thread.currentThread().name}")
+
+                    bucket.create(blobName, blobInputStream)
+                }
+            }.awaitAll()
         }
     }
 
