@@ -1,6 +1,7 @@
 import com.google.cloud.storage.Blob
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.StorageOptions
+import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -14,34 +15,41 @@ class Storage(BucketName: String) {
     }
 
     fun store(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
-        val blobs = storeBlobs(pathsOrGlob, prefixPath)
-        storeIndex(blobs, key, tags)
-        return blobs
-    }
-
-    // TODO: ダウンロードしたファイル一覧を返す
-    fun download(localPath: String, key: String, tag: String): Unit {
-        val content = fetchIndex(key, tag)
-        val remotePaths = content.split("\n")
-
-        downloadBlobs(remotePaths, localPath)
-    }
-
-    private fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
-        val content = blobs.map { it.name }.joinToString(separator = "\n")
-        val indexPaths = tags.map { "skw_index/$key/$it" }
-        indexPaths.forEach {
-            bucket.create(it, content.toByteArray())
+        return runBlocking {
+            val blobs = storeBlobs(pathsOrGlob, prefixPath)
+            storeIndex(blobs, key, tags)
+            blobs
         }
     }
 
-    private fun fetchIndex(key: String, tag: String): String {
-        // TODO: 存在しなかった場合のエラーハンドリング
-        val blob = bucket.get("skw_index/$key/$tag")
+    fun download(localPath: String, key: String, tag: String): List<Path> {
+        return runBlocking {
+            val content = fetchIndex(key, tag)
+            val remotePaths = content.split("\n")
+
+            downloadBlobs(remotePaths, localPath)
+        }
+    }
+
+    private suspend fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
+        val content = blobs.joinToString(separator = "\n") { it.name }
+        val indexPaths = tags.map { "skw_index/$key/$it" }
+        return coroutineScope {
+            async(Dispatchers.IO) {
+                indexPaths.forEach {
+                    bucket.create(it, content.toByteArray())
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchIndex(key: String, tag: String): String {
+        val blob: Blob = withContext(Dispatchers.IO) { bucket.get("skw_index/$key/$tag") }
+            ?: throw IllegalArgumentException("Index file not found. key: $key, tag: $tag")
         return String(blob.getContent())
     }
 
-    private fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
+    private suspend fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
         val paths = resolvePathsOrGlob(pathsOrGlob)
             .filter { p -> p.toFile().isFile }
         if (paths.isEmpty()) {
@@ -49,10 +57,17 @@ class Storage(BucketName: String) {
         }
         println("Try to upload local files: ${paths.map { it.toString() }}")
 
-        return paths.map { localPath ->
-            val blobName = toBlobName(localPath, prefixPath)
-            val blobInputStream = Files.newInputStream(localPath)
-            return@map bucket.create(blobName, blobInputStream)
+        return coroutineScope {
+            paths.map { localPath ->
+                async(Dispatchers.IO) {
+                    val blobName = toBlobName(localPath, prefixPath)
+                    val blobInputStream = Files.newInputStream(localPath)
+
+                    println("$blobName : Working in thread ${Thread.currentThread().name}")
+
+                    bucket.create(blobName, blobInputStream)
+                }
+            }.awaitAll()
         }
     }
 
@@ -64,14 +79,20 @@ class Storage(BucketName: String) {
         return remotePath.toList().joinToString(separator = "/")
     }
 
-    private fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String) {
-        return remotePaths.forEach { remotePath ->
-            val blob = bucket.get(remotePath)
-            val localPath = Paths.get(localPathPrefix, remotePath).normalize()
-            println(localPath)
+    private suspend fun downloadBlobs(remotePaths: List<String>, localPathPrefix: String): List<Path> {
+        return coroutineScope {
+            remotePaths.map { remotePath ->
+                async(Dispatchers.IO) {
+                    val blob = bucket.get(remotePath)
+                    val localPath = Paths.get(localPathPrefix, remotePath).normalize()
 
-            Files.createDirectories(localPath.parent)
-            blob.downloadTo(localPath)
+                    println("$remotePath : Working in thread ${Thread.currentThread().name}")
+
+                    Files.createDirectories(localPath.parent)
+                    blob.downloadTo(localPath)
+                    localPath
+                }
+            }.awaitAll()
         }
     }
 }
