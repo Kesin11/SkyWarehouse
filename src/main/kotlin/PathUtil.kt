@@ -47,3 +47,7 @@ fun globRootDirPath(glob: String): Path {
         false -> Paths.get(".", *rootDirStrings.toTypedArray()).normalize()
     }
 }
+
+fun getLocalFilePaths(pathsOrGlob: List<String>): List<Path> {
+    return resolvePathsOrGlob(pathsOrGlob).filter { p -> p.toFile().isFile }
+}
