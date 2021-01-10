@@ -61,9 +61,27 @@ fun main(args: Array<String>) {
             }
         }
     }
+    class ListTagsCommand: Subcommand("tags", "List tags subcommand") {
+        val key: String by argument(ArgType.String, description = "Key name")
+        val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+        override fun execute() {
+            runCatching {
+                val storage = Storage(bucketName)
+                storage.listTags(key)
+            }.onSuccess {
+                it.forEach { key -> println(key) }
+            }.onFailure {
+                System.err.println("Failed list tags. Error:")
+                System.err.println(it)
+                System.err.println(it.stackTraceToString())
+                kotlin.system.exitProcess(1)
+            }
+        }
+    }
     val storeCommand = StoreCommand()
     val getCommand = GetCommand()
     val listKeyCommand = ListKeyCommand()
-    parser.subcommands(storeCommand, getCommand, listKeyCommand)
+    val listTagsCommand = ListTagsCommand()
+    parser.subcommands(storeCommand, getCommand, listKeyCommand, listTagsCommand)
     parser.parse(args)
 }

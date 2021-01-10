@@ -63,6 +63,25 @@ class Storage {
         }
     }
 
+    fun listTags(key: String): List<String> {
+        val pager = bucket.list(
+            Storage.BlobListOption.pageSize(100),
+            Storage.BlobListOption.prefix("$indexPrefix/$key/"),
+        )
+        val iterator = pager.iterateAll()
+        if (!iterator.iterator().hasNext()) {
+            throw RuntimeException("key:$key has not any tags!")
+
+        }
+
+        return iterator
+            .sortedBy { -it.updateTime }
+            .map { blob ->
+                val name = blob.name
+                name.substringAfterLast('/').trimEnd('/')
+            }
+    }
+
     private suspend fun fetchIndex(key: String, tag: String): String {
         val blob: Blob = withContext(Dispatchers.IO) { bucket.get("$indexPrefix/$key/$tag") }
             ?: throw IllegalArgumentException("Index file not found. key: $key, tag: $tag")
