@@ -6,12 +6,16 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class Storage(BucketName: String) {
+class Storage {
     private var bucket: Bucket
 
-    init {
+    constructor(bucket: Bucket) {
+        this.bucket = bucket
+    }
+
+    constructor(bucketName: String) {
         val storage = StorageOptions.getDefaultInstance().service
-        bucket = storage.get(BucketName) ?: error("Bucket $BucketName does not exist.")
+        this.bucket = storage.get(bucketName) ?: error("Bucket $bucketName does not exist.")
     }
 
     fun store(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
@@ -50,8 +54,7 @@ class Storage(BucketName: String) {
     }
 
     private suspend fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
-        val paths = resolvePathsOrGlob(pathsOrGlob)
-            .filter { p -> p.toFile().isFile }
+        val paths = getLocalFilePaths(pathsOrGlob)
         if (paths.isEmpty()) {
             throw IllegalArgumentException("None of files are matched by paths or glob")
         }
