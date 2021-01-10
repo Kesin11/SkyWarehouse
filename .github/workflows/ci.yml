@@ -78,6 +78,15 @@ jobs:
             -k "github_actions" \
             -t "${{ github.sha }}" -t "latest" \
             ./github_actions/**/*.txt
+      - name: list keys
+        run: |
+          java -jar skw.jar keys \
+            -b "kesin11_bazel_cache"
+      - name: list tags
+        run: |
+          java -jar skw.jar tags \
+            -b "kesin11_bazel_cache" \
+            "github_actions"
       - name: get
         run: |
           java -jar skw.jar get \
