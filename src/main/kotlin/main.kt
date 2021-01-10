@@ -1,5 +1,6 @@
 import kotlinx.cli.*
 
+@ExperimentalCli
 fun main(args: Array<String>) {
     val parser = ArgParser("skw")
     class StoreCommand: Subcommand("store", "Store subcommand") {
