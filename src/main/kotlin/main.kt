@@ -44,8 +44,26 @@ fun main(args: Array<String>) {
             }
         }
     }
+    class ListKeyCommand: Subcommand("keys", "List keys subcommand") {
+        val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+        val prefix: String? by option(ArgType.String, shortName = "p", description = "Key name prefix")
+        override fun execute() {
+            runCatching {
+                val storage = Storage(bucketName)
+                storage.listKeys(prefix)
+            }.onSuccess {
+                it.forEach { key -> println(key) }
+            }.onFailure {
+                System.err.println("Failed list key. Error:")
+                System.err.println(it)
+                System.err.println(it.stackTraceToString())
+                kotlin.system.exitProcess(1)
+            }
+        }
+    }
     val storeCommand = StoreCommand()
     val getCommand = GetCommand()
-    parser.subcommands(storeCommand, getCommand)
+    val listKeyCommand = ListKeyCommand()
+    parser.subcommands(storeCommand, getCommand, listKeyCommand)
     parser.parse(args)
 }

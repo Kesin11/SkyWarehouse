@@ -1,5 +1,6 @@
 import com.google.cloud.storage.Blob
 import com.google.cloud.storage.Bucket
+import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageOptions
 import kotlinx.coroutines.*
 import java.nio.file.Files
@@ -8,6 +9,7 @@ import java.nio.file.Paths
 
 class Storage {
     private var bucket: Bucket
+    private val indexPrefix = "skw_index"
 
     constructor(bucket: Bucket) {
         this.bucket = bucket
@@ -35,9 +37,23 @@ class Storage {
         }
     }
 
+    fun listKeys(keyPrefix: String?): List<String> {
+        val prefix = keyPrefix ?: ""
+        val pager = bucket.list(
+            Storage.BlobListOption.pageSize(100),
+            Storage.BlobListOption.prefix("$indexPrefix/$prefix"),
+            Storage.BlobListOption.currentDirectory(),
+        )
+        val iterator = pager.iterateAll()
+        return iterator.map { blob ->
+            val name = blob.name
+            name.substringAfter('/').trimEnd('/')
+        }
+    }
+
     private suspend fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
         val content = blobs.joinToString(separator = "\n") { it.name }
-        val indexPaths = tags.map { "skw_index/$key/$it" }
+        val indexPaths = tags.map { "$indexPrefix/$key/$it" }
         return coroutineScope {
             async(Dispatchers.IO) {
                 indexPaths.forEach {
@@ -48,7 +64,7 @@ class Storage {
     }
 
     private suspend fun fetchIndex(key: String, tag: String): String {
-        val blob: Blob = withContext(Dispatchers.IO) { bucket.get("skw_index/$key/$tag") }
+        val blob: Blob = withContext(Dispatchers.IO) { bucket.get("$indexPrefix/$key/$tag") }
             ?: throw IllegalArgumentException("Index file not found. key: $key, tag: $tag")
         return String(blob.getContent())
     }
