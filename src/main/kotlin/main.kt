@@ -1,5 +1,6 @@
 import kotlinx.cli.*
 
+@ExperimentalCli
 fun main(args: Array<String>) {
     val parser = ArgParser("skw")
     class StoreCommand: Subcommand("store", "Store subcommand") {
@@ -44,8 +45,44 @@ fun main(args: Array<String>) {
             }
         }
     }
+    class ListKeyCommand: Subcommand("keys", "List keys subcommand") {
+        val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+        val prefix: String? by option(ArgType.String, shortName = "p", description = "Key name prefix")
+        override fun execute() {
+            runCatching {
+                val storage = Storage(bucketName)
+                storage.listKeys(prefix)
+            }.onSuccess {
+                it.forEach { key -> println(key) }
+            }.onFailure {
+                System.err.println("Failed list key. Error:")
+                System.err.println(it)
+                System.err.println(it.stackTraceToString())
+                kotlin.system.exitProcess(1)
+            }
+        }
+    }
+    class ListTagsCommand: Subcommand("tags", "List tags subcommand") {
+        val key: String by argument(ArgType.String, description = "Key name")
+        val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+        override fun execute() {
+            runCatching {
+                val storage = Storage(bucketName)
+                storage.listTags(key)
+            }.onSuccess {
+                it.forEach { key -> println(key) }
+            }.onFailure {
+                System.err.println("Failed list tags. Error:")
+                System.err.println(it)
+                System.err.println(it.stackTraceToString())
+                kotlin.system.exitProcess(1)
+            }
+        }
+    }
     val storeCommand = StoreCommand()
     val getCommand = GetCommand()
-    parser.subcommands(storeCommand, getCommand)
+    val listKeyCommand = ListKeyCommand()
+    val listTagsCommand = ListTagsCommand()
+    parser.subcommands(storeCommand, getCommand, listKeyCommand, listTagsCommand)
     parser.parse(args)
 }
