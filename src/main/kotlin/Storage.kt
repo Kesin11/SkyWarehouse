@@ -1,7 +1,5 @@
-import com.google.cloud.storage.Blob
-import com.google.cloud.storage.Bucket
+import com.google.cloud.storage.*
 import com.google.cloud.storage.Storage
-import com.google.cloud.storage.StorageOptions
 import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,7 +15,14 @@ class Storage {
 
     constructor(bucketName: String) {
         val storage = StorageOptions.getDefaultInstance().service
-        this.bucket = storage.get(bucketName) ?: error("Bucket $bucketName does not exist.")
+        try {
+            this.bucket = storage.get(bucketName) ?: error("Bucket $bucketName does not exist.")
+        } catch (e: StorageException) {
+            when (e.code) {
+                401 -> error("Must need authorization to access GCS. Set service account path to GOOGLE_APPLICATION_CREDENTIALS or execute application-default login (https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login).")
+                else -> throw e
+            }
+        }
     }
 
     fun store(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {

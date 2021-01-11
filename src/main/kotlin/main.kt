@@ -2,8 +2,8 @@ import kotlinx.cli.*
 
 @ExperimentalCli
 fun main(args: Array<String>) {
-    val parser = ArgParser("skw")
-    class StoreCommand: Subcommand("store", "Store subcommand") {
+    val parser = ArgParser("Sky Warehouse")
+    class StoreCommand: Subcommand("store", "Upload files to cloud storage and register index key and tags") {
         val pathsOrGlob: List<String> by argument(ArgType.String, description = "Paths or file glob").multiple(10000)
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
@@ -24,8 +24,8 @@ fun main(args: Array<String>) {
             }
         }
     }
-    class GetCommand: Subcommand("get", "Get subcommand") {
-        val path: String by argument(ArgType.String, description = "Download destination path")
+    class GetCommand: Subcommand("get", "Download files from cloud storage by index key and tag") {
+        val path: String by argument(ArgType.String, description = "Download destination local path")
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tag: String by option(ArgType.String, shortName = "t", description = "Tag").required() // defaultでlatestにしたいがやり方がわからない
@@ -45,9 +45,9 @@ fun main(args: Array<String>) {
             }
         }
     }
-    class ListKeyCommand: Subcommand("keys", "List keys subcommand") {
+    class ListKeyCommand: Subcommand("keys", "List registered index key. Results are limited max 100 items") {
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
-        val prefix: String? by option(ArgType.String, shortName = "p", description = "Key name prefix")
+        val prefix: String? by option(ArgType.String, shortName = "p", description = "Key name prefix to filter output")
         override fun execute() {
             runCatching {
                 val storage = Storage(bucketName)
@@ -62,7 +62,7 @@ fun main(args: Array<String>) {
             }
         }
     }
-    class ListTagsCommand: Subcommand("tags", "List tags subcommand") {
+    class ListTagsCommand: Subcommand("tags", "List registered tags by index key. Results are limited max 100 items.") {
         val key: String by argument(ArgType.String, description = "Key name")
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         override fun execute() {
