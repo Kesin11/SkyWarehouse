@@ -64,16 +64,16 @@ jobs:
           mkdir -p github_actions/nest
           echo ${{ github.sha }} > github_actions/${{ github.run_number }}.txt
           echo ${{ github.sha }} > github_actions/nest/${{ github.run_number }}.txt
-      - name: store wildcard paths
+      - name: Upload wildcard paths
         run: |
-          java -jar skw.jar store \
+          java -jar skw.jar upload \
             -b "kesin11_bazel_cache" \
             -k "github_actions" \
             -t "${{ github.sha }}" -t "latest" \
             ./github_actions/*.txt
-      - name: store glob paths
+      - name: Upload glob paths
         run: |
-          java -jar skw.jar store \
+          java -jar skw.jar upload \
             -b "kesin11_bazel_cache" \
             -k "github_actions" \
             -t "${{ github.sha }}" -t "latest" \
@@ -117,9 +117,9 @@ jobs:
           name: jars
 
       # Execute
-      - name: store own jar to GCS
+      - name: Upload own jar to GCS
         run: |
-          java -jar skw.jar store \
+          java -jar skw.jar upload \
             -b "kesin11_bazel_cache" \
             -k "dogfooding" \
             -t "${{ github.sha }}" -t "latest" \

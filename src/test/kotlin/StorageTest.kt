@@ -33,7 +33,7 @@ internal class StorageTest {
     }
 
     @Nested
-    inner class TestStore {
+    inner class TestUpload {
         private val pathsOrGlob = listOf("./sample")
         private val prefix = "."
         private val key = "test"
@@ -50,7 +50,7 @@ internal class StorageTest {
             every { bucketMock.create(any<String>(), any<InputStream>()) } returns blobMock
             every { getLocalFilePaths(any()) } returns listOf(Paths.get(""))
 
-            assertDoesNotThrow { storage.store(pathsOrGlob, key, tags, prefix) }
+            assertDoesNotThrow { storage.upload(pathsOrGlob, key, tags, prefix) }
         }
 
         @Test
@@ -60,7 +60,7 @@ internal class StorageTest {
             every { Files.newInputStream(dummyPath) } throws IOException()
 
             assertThrows<IOException> {
-                storage.store(pathsOrGlob, key, tags, prefix)
+                storage.upload(pathsOrGlob, key, tags, prefix)
             }
         }
 
@@ -71,7 +71,7 @@ internal class StorageTest {
             every { bucketMock.create("fail.txt", any<InputStream>()) } throws StorageException(500, "Dummy Error")
 
             assertThrows<StorageException> {
-                storage.store(pathsOrGlob, key, tags, prefix)
+                storage.upload(pathsOrGlob, key, tags, prefix)
             }
         }
     }

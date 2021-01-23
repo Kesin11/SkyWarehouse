@@ -3,17 +3,22 @@ import kotlinx.cli.*
 @ExperimentalCli
 fun main(args: Array<String>) {
     val parser = ArgParser("Sky Warehouse")
-    class StoreCommand: Subcommand("store", "Upload files to cloud storage and register index key and tags") {
+
+    class UploadCommand : Subcommand("upload", "Upload files to cloud storage and register index key and tags") {
         val pathsOrGlob: List<String> by argument(ArgType.String, description = "Paths or file glob").multiple(10000)
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
-        val tags: List<String> by option(ArgType.String, shortName = "t", description = "Tags").multiple() // defaultでlatestにしたいがやり方がわからない
+        val tags: List<String> by option(
+            ArgType.String,
+            shortName = "t",
+            description = "Tags"
+        ).multiple() // defaultでlatestにしたいがやり方がわからない
         val prefix: String? by option(ArgType.String, shortName = "p", description = "Prefix path in GCS")
         override fun execute() {
             // Upload
             runCatching {
                 val storage = Storage(bucketName)
-                storage.store(pathsOrGlob, key, tags, prefix)
+                storage.upload(pathsOrGlob, key, tags, prefix)
             }.onSuccess { blobs ->
                 println("Success upload to remote: ${blobs.map { it.name }}")
             }.onFailure {
@@ -24,11 +29,17 @@ fun main(args: Array<String>) {
             }
         }
     }
-    class GetCommand: Subcommand("get", "Download files from cloud storage by index key and tag") {
+
+    class GetCommand : Subcommand("get", "Download files from cloud storage by index key and tag") {
         val path: String by argument(ArgType.String, description = "Download destination local path")
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
-        val tag: String by option(ArgType.String, shortName = "t", description = "Tag").required() // defaultでlatestにしたいがやり方がわからない
+        val tag: String by option(
+            ArgType.String,
+            shortName = "t",
+            description = "Tag"
+        ).required() // defaultでlatestにしたいがやり方がわからない
+
         override fun execute() {
             // Download
             runCatching {
@@ -45,7 +56,8 @@ fun main(args: Array<String>) {
             }
         }
     }
-    class ListKeyCommand: Subcommand("keys", "List registered index key. Results are limited max 100 items") {
+
+    class ListKeyCommand : Subcommand("keys", "List registered index key. Results are limited max 100 items") {
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val prefix: String? by option(ArgType.String, shortName = "p", description = "Key name prefix to filter output")
         override fun execute() {
@@ -62,7 +74,9 @@ fun main(args: Array<String>) {
             }
         }
     }
-    class ListTagsCommand: Subcommand("tags", "List registered tags by index key. Results are limited max 100 items.") {
+
+    class ListTagsCommand :
+        Subcommand("tags", "List registered tags by index key. Results are limited max 100 items.") {
         val key: String by argument(ArgType.String, description = "Key name")
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         override fun execute() {
@@ -79,10 +93,11 @@ fun main(args: Array<String>) {
             }
         }
     }
-    val storeCommand = StoreCommand()
+
+    val uploadCommand = UploadCommand()
     val getCommand = GetCommand()
     val listKeyCommand = ListKeyCommand()
     val listTagsCommand = ListTagsCommand()
-    parser.subcommands(storeCommand, getCommand, listKeyCommand, listTagsCommand)
+    parser.subcommands(uploadCommand, getCommand, listKeyCommand, listTagsCommand)
     parser.parse(args)
 }
