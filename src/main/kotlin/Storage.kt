@@ -25,10 +25,10 @@ class Storage {
         }
     }
 
-    fun store(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
+    fun upload(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
         return runBlocking {
-            val blobs = storeBlobs(pathsOrGlob, prefixPath)
-            storeIndex(blobs, key, tags)
+            val blobs = uploadBlobs(pathsOrGlob, prefixPath)
+            uploadIndex(blobs, key, tags)
             blobs
         }
     }
@@ -56,7 +56,7 @@ class Storage {
         }
     }
 
-    private suspend fun storeIndex(blobs: List<Blob>, key: String, tags: List<String>) {
+    private suspend fun uploadIndex(blobs: List<Blob>, key: String, tags: List<String>) {
         val content = blobs.joinToString(separator = "\n") { it.name }
         val indexPaths = tags.map { "$indexPrefix/$key/$it" }
         return coroutineScope {
@@ -93,7 +93,7 @@ class Storage {
         return String(blob.getContent())
     }
 
-    private suspend fun storeBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
+    private suspend fun uploadBlobs(pathsOrGlob: List<String>, prefixPath: String?): List<Blob> {
         val paths = getLocalFilePaths(pathsOrGlob)
         if (paths.isEmpty()) {
             throw IllegalArgumentException("None of files are matched by paths or glob")
