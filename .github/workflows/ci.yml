@@ -87,9 +87,9 @@ jobs:
           java -jar skw.jar tags \
             -b "kesin11_bazel_cache" \
             "github_actions"
-      - name: get
+      - name: Download
         run: |
-          java -jar skw.jar get \
+          java -jar skw.jar download \
             -b "kesin11_bazel_cache" \
             -k "github_actions" \
             -t "${{ github.sha }}" \

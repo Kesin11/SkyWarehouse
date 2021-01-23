@@ -30,7 +30,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    class GetCommand : Subcommand("get", "Download files from cloud storage by index key and tag") {
+    class DownloadCommand : Subcommand("download", "Download files from cloud storage by index key and tag") {
         val path: String by argument(ArgType.String, description = "Download destination local path")
         val bucketName: String by option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
@@ -95,9 +95,9 @@ fun main(args: Array<String>) {
     }
 
     val uploadCommand = UploadCommand()
-    val getCommand = GetCommand()
+    val downloadCommand = DownloadCommand()
     val listKeyCommand = ListKeyCommand()
     val listTagsCommand = ListTagsCommand()
-    parser.subcommands(uploadCommand, getCommand, listKeyCommand, listTagsCommand)
+    parser.subcommands(uploadCommand, downloadCommand, listKeyCommand, listTagsCommand)
     parser.parse(args)
 }
