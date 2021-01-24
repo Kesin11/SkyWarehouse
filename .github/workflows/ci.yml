@@ -21,7 +21,14 @@ jobs:
         path: ~/.gradle/caches
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
         restore-keys: ${{ runner.os }}-gradle
-    
+    - name: Restore and export service account to ENV for GCS remote cache
+      run: |
+        echo $GCS_SERVICE_ACCOUNT | base64 --decode --ignore-garbage > service.json
+        echo "GOOGLE_APPLICATION_CREDENTIALS=service.json" >> $GITHUB_ENV
+      if: env.GCS_SERVICE_ACCOUNT
+      env:
+        GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
+
     # Execute
     - name: Build with Gradle
       run: ./gradlew build --profile
