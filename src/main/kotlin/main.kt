@@ -20,7 +20,8 @@ fun main(args: Array<String>) {
                 val storage = Storage(bucketName)
                 storage.upload(pathsOrGlob, key, tags, prefix)
             }.onSuccess { blobs ->
-                println("Success upload to remote: ${blobs.map { it.name }}")
+                println("Success upload to remote:")
+                println(blobs.joinToString("\n") { it.name })
             }.onFailure {
                 System.err.println("Failed upload $pathsOrGlob. Error:")
                 System.err.println(it)
@@ -46,7 +47,8 @@ fun main(args: Array<String>) {
                 storage.download(path, key, tag)
             }.onSuccess { paths ->
                 println("Success download key: $key, tag: $tag")
-                println("Download to: ${paths.map { it.toString() }}")
+                println("Download to:")
+                println(paths.joinToString("\n") { it.toString() })
             }.onFailure {
                 System.err.println("Failed downoad key: $key, tag: $tag, Error:")
                 System.err.println(it)
