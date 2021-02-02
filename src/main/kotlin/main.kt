@@ -1,4 +1,9 @@
-import kotlinx.cli.*
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.ExperimentalCli
+import kotlinx.cli.Subcommand
+import kotlinx.cli.multiple
+import kotlinx.cli.required
 
 @ExperimentalCli
 fun main(args: Array<String>) {
