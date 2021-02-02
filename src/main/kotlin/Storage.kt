@@ -76,7 +76,6 @@ class Storage {
         val iterator = pager.iterateAll()
         if (!iterator.iterator().hasNext()) {
             throw RuntimeException("key:$key has not any tags!")
-
         }
 
         return iterator
