@@ -1,5 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.4.21"
@@ -9,14 +9,20 @@ plugins {
 
     // For create fatjar with ":shadowJar"
     id("com.github.johnrengelman.shadow") version "6.1.0"
+
+    id("org.jlleitschuh.gradle.ktlint") version "9.4.1"
 }
 
 group = "com.kesin11"
 version = "1.0-SNAPSHOT"
 
+application {
+    mainClassName = "MainKt"
+}
+
 repositories {
     mavenCentral()
-    maven ( url = "https://kotlin.bintray.com/kotlinx" )
+    maven(url = "https://kotlin.bintray.com/kotlinx")
 }
 
 dependencies {
@@ -62,6 +68,14 @@ tasks.withType<Test> {
     }
 }
 
-application {
-    mainClassName = "MainKt"
+ktlint {
+    outputToConsole.set(true)
+    coloredOutput.set(false)
+    reporters {
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+    }
+    filter {
+        exclude("**/style-violations.kt")
+    }
 }
