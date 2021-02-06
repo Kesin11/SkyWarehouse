@@ -5,6 +5,8 @@ plugins {
     id("io.perezalcolea.gcs-build-cache") version "0.1.0"
 }
 
+enableFeaturePreview("ONE_LOCKFILE_PER_PROJECT")
+
 buildCache {
     val isCi = System.getenv().containsKey("CI")
     local {
