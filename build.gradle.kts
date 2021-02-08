@@ -41,6 +41,10 @@ dependencies {
     implementation("com.google.cloud:google-cloud-storage:1.113.6")
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 tasks.test {
     useJUnitPlatform()
 }
