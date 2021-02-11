@@ -34,7 +34,7 @@ internal class StorageTest {
         every { blobMock.getContent() } returns "".toByteArray()
 
         bucketMock = mockk()
-        storage = Storage(bucketMock)
+        storage = Storage(bucketMock, Logger(LogLevel.NONE))
     }
 
     @AfterEach
