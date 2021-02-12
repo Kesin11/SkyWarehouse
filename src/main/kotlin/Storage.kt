@@ -15,13 +15,16 @@ import java.nio.file.Paths
 
 class Storage {
     private var bucket: Bucket
+    private val logger: Logger
     private val indexPrefix = "skw_index"
 
-    constructor(bucket: Bucket) {
+    constructor(bucket: Bucket, logger: Logger) {
         this.bucket = bucket
+        this.logger = logger
     }
 
-    constructor(bucketName: String) {
+    constructor(bucketName: String, logger: Logger) {
+        this.logger = logger
         val storage = StorageOptions.getDefaultInstance().service
         try {
             this.bucket = storage.get(bucketName) ?: error("Bucket $bucketName does not exist.")
@@ -105,7 +108,7 @@ class Storage {
         if (paths.isEmpty()) {
             throw IllegalArgumentException("None of files are matched by paths or glob")
         }
-        println("Try to upload local files: ${paths.map { it.toString() }}")
+        logger.debug("Try to upload local files: ${paths.map { it.toString() }}")
 
         return coroutineScope {
             paths.map { localPath ->
@@ -113,7 +116,7 @@ class Storage {
                     val blobName = toBlobName(localPath, prefixPath)
                     val blobInputStream = Files.newInputStream(localPath)
 
-                    println("$blobName : Working in thread ${Thread.currentThread().name}")
+                    logger.debug("$blobName : Working in thread ${Thread.currentThread().name}")
 
                     bucket.create(blobName, blobInputStream)
                 }
@@ -136,7 +139,7 @@ class Storage {
                     val blob = bucket.get(remotePath)
                     val localPath = Paths.get(localPathPrefix, remotePath).normalize()
 
-                    println("$remotePath : Working in thread ${Thread.currentThread().name}")
+                    logger.debug("$remotePath : Working in thread ${Thread.currentThread().name}")
 
                     Files.createDirectories(localPath.parent)
                     blob.downloadTo(localPath)

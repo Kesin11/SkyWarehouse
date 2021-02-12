@@ -2,6 +2,7 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
+import kotlinx.cli.default
 import kotlinx.cli.multiple
 import kotlinx.cli.required
 
@@ -9,6 +10,8 @@ import kotlinx.cli.required
 fun main(args: Array<String>) {
     val parser = ArgParser("Sky Warehouse")
     val bucketName: String by parser.option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+    val verbose: Boolean by parser.option(ArgType.Boolean, shortName = "v", description = "Verbose log").default(false)
+    lateinit var logger: Logger
 
     class UploadCommand : Subcommand("upload", "Upload files to cloud storage and register index key and tags") {
         val pathsOrGlob: List<String> by argument(ArgType.String, description = "Paths or file glob").multiple(10000)
@@ -20,17 +23,18 @@ fun main(args: Array<String>) {
         ).multiple() // defaultでlatestにしたいがやり方がわからない
         val prefix: String? by option(ArgType.String, shortName = "p", description = "Prefix path in GCS")
         override fun execute() {
+            logger = Logger(verbose)
             // Upload
             runCatching {
-                val storage = Storage(bucketName)
+                val storage = Storage(bucketName, logger)
                 storage.upload(pathsOrGlob, key, tags, prefix)
             }.onSuccess { blobs ->
-                println("Success upload to remote:")
-                println(blobs.joinToString("\n") { it.name })
+                logger.log("Success upload to remote:")
+                logger.log(blobs.joinToString("\n") { it.name })
             }.onFailure {
-                System.err.println("Failed upload $pathsOrGlob. Error:")
-                System.err.println(it)
-                System.err.println(it.stackTraceToString())
+                logger.warn("Failed upload $pathsOrGlob. Error:")
+                logger.warn(it)
+                logger.warn(it.stackTraceToString())
                 kotlin.system.exitProcess(1)
             }
         }
@@ -46,18 +50,19 @@ fun main(args: Array<String>) {
         ).required() // defaultでlatestにしたいがやり方がわからない
 
         override fun execute() {
+            logger = Logger(verbose)
             // Download
             runCatching {
-                val storage = Storage(bucketName)
+                val storage = Storage(bucketName, logger)
                 storage.download(path, key, tag)
             }.onSuccess { paths ->
-                println("Success download key: $key, tag: $tag")
-                println("Download to:")
-                println(paths.joinToString("\n") { it.toString() })
+                logger.log("Success download key: $key, tag: $tag")
+                logger.log("Download to:")
+                logger.log(paths.joinToString("\n") { it.toString() })
             }.onFailure {
-                System.err.println("Failed downoad key: $key, tag: $tag, Error:")
-                System.err.println(it)
-                System.err.println(it.stackTraceToString())
+                logger.warn("Failed download key: $key, tag: $tag, Error:")
+                logger.warn(it)
+                logger.warn(it.stackTraceToString())
                 kotlin.system.exitProcess(1)
             }
         }
@@ -66,15 +71,16 @@ fun main(args: Array<String>) {
     class ListKeyCommand : Subcommand("keys", "List registered index key. Results are limited max 100 items") {
         val prefix: String? by option(ArgType.String, shortName = "p", description = "Key name prefix to filter output")
         override fun execute() {
+            logger = Logger(verbose)
             runCatching {
-                val storage = Storage(bucketName)
+                val storage = Storage(bucketName, logger)
                 storage.listKeys(prefix)
             }.onSuccess {
-                it.forEach { key -> println(key) }
+                logger.log(it.joinToString("\n"))
             }.onFailure {
-                System.err.println("Failed list key. Error:")
-                System.err.println(it)
-                System.err.println(it.stackTraceToString())
+                logger.warn("Failed list key. Error:")
+                logger.warn(it)
+                logger.warn(it.stackTraceToString())
                 kotlin.system.exitProcess(1)
             }
         }
@@ -84,15 +90,16 @@ fun main(args: Array<String>) {
         Subcommand("tags", "List registered tags by index key. Results are limited max 100 items.") {
         val key: String by argument(ArgType.String, description = "Key name")
         override fun execute() {
+            logger = Logger(verbose)
             runCatching {
-                val storage = Storage(bucketName)
+                val storage = Storage(bucketName, logger)
                 storage.listTags(key)
             }.onSuccess {
-                it.forEach { key -> println(key) }
+                logger.log(it.joinToString("\n"))
             }.onFailure {
-                System.err.println("Failed list tags. Error:")
-                System.err.println(it)
-                System.err.println(it.stackTraceToString())
+                logger.warn("Failed list tags. Error:")
+                logger.warn(it)
+                logger.warn(it.stackTraceToString())
                 kotlin.system.exitProcess(1)
             }
         }
