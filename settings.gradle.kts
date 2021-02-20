@@ -1,5 +1,5 @@
 
-rootProject.name = "SkyWarehouse"
+rootProject.name = "skw"
 
 plugins {
     id("io.perezalcolea.gcs-build-cache") version "0.1.0"
