@@ -20,6 +20,8 @@ application {
     mainClassName = "MainKt"
 }
 
+// ---- Dependencies
+
 repositories {
     mavenCentral()
     maven(url = "https://kotlin.bintray.com/kotlinx")
@@ -45,24 +47,40 @@ dependencyLocking {
     lockAllConfigurations()
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+// ---- Kotlin
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-// Disable default jar task and build only fat jar
-tasks.named("jar") {
-    enabled = false
-}
+// ---- Create jar archives
+
 tasks.named("shadowJar", ShadowJar::class.java) {
     manifest {
         attributes["Main-Class"] = "MainKt"
     }
-    archiveFileName.set("skw.jar")
+    archiveBaseName.set("skw")
+    archiveClassifier.set("")
+    archiveVersion.set("")
     minimize()
+}
+
+distributions {
+    create("archive") {
+        // Set archive name to skw.(tar|zip)
+        distributionBaseName.set("skw")
+        version = ""
+        // Copy lib/ and bin/ directory that made by shadow
+        contents {
+            from(tasks["installShadowDist"].outputs)
+        }
+    }
+}
+
+// ---- Test and check
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.withType<Test> {
