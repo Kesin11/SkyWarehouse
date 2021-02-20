@@ -31,13 +31,15 @@ jobs:
 
     # Execute
     - name: Build with Gradle
-      run: ./gradlew build --profile
-    
+      run: ./gradlew assembleArchiveDist test --profile
+
     # Post
     - uses: actions/upload-artifact@v2
       with:
-        name: jars
-        path: build/libs
+        name: artifacts
+        path: |
+          build/libs/*.jar
+          build/distributions
       if: always()
     - uses: actions/upload-artifact@v2
       with:
@@ -69,8 +71,9 @@ jobs:
           java-version: ${{ matrix.java }}
       - uses: actions/download-artifact@v2
         with:
-          name: jars
-      
+          name: artifacts
+      - run: tar -xvf distributions/skw.tar
+
       # Integrate test
       - run: |
           mkdir -p github_actions/nest
@@ -78,7 +81,7 @@ jobs:
           echo ${{ github.sha }} > github_actions/nest/${{ github.run_number }}.txt
       - name: Upload wildcard paths
         run: |
-          java -jar skw.jar upload \
+          ./skw/bin/skw upload \
             -b "$BUCKET" \
             -k "$KEY" \
             -p "java${{ matrix.java }}" \
@@ -86,7 +89,7 @@ jobs:
             ./github_actions/*.txt
       - name: Upload glob paths
         run: |
-          java -jar skw.jar upload \
+          ./skw/bin/skw upload \
             -b "$BUCKET" \
             -k "$KEY" \
             -p "java${{ matrix.java }}" \
@@ -94,16 +97,16 @@ jobs:
             ./github_actions/**/*.txt
       - name: list keys
         run: |
-          java -jar skw.jar keys \
+          ./skw/bin/skw keys \
             -b "$BUCKET" \
       - name: list tags
         run: |
-          java -jar skw.jar tags \
+          ./skw/bin/skw tags \
             -b "$BUCKET" \
             "$KEY"
       - name: Download
         run: |
-          java -jar skw.jar download \
+          ./skw/bin/skw download \
             -b "$BUCKET" \
             -k "$KEY" \
             -t "${{ github.sha }}-java${{ matrix.java }}" \
@@ -128,14 +131,15 @@ jobs:
           java-version: 1.8
       - uses: actions/download-artifact@v2
         with:
-          name: jars
+          name: artifacts
+      - run: tar -xvf distributions/skw.tar
 
       # Execute
       - name: Upload own jar to GCS
         run: |
-          java -jar skw.jar upload \
+          ./skw/bin/skw upload \
             -b "kesin11_bazel_cache" \
             -k "dogfooding" \
             -t "${{ github.sha }}" -t "latest" \
             -p "dogfooding/${{ github.run_number }}" \
-            ./skw.jar
+            ./libs/skw.jar
