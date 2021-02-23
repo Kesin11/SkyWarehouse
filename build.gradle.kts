@@ -51,13 +51,18 @@ dependencyLocking {
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.languageVersion = "1.4"
 }
 
 // ---- Create jar archives
 
-tasks.named("shadowJar", ShadowJar::class.java) {
+tasks.shadowJar {
     manifest {
-        attributes["Main-Class"] = "MainKt"
+        attributes(
+            "Main-Class" to "MainKt",
+            "Implementation-Title" to "SkyWarehouse",
+            "Implementation-Version" to project.version.toString()
+        )
     }
     archiveBaseName.set("skw")
     archiveClassifier.set("")
@@ -67,9 +72,8 @@ tasks.named("shadowJar", ShadowJar::class.java) {
 
 distributions {
     create("archive") {
-        // Set archive name to skw.(tar|zip)
+        // Set archive name to skw-$version.(tar|zip)
         distributionBaseName.set("skw")
-        version = ""
         // Copy lib/ and bin/ directory that made by shadow
         contents {
             from(tasks["installShadowDist"].outputs)

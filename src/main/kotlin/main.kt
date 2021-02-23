@@ -5,10 +5,17 @@ import kotlinx.cli.Subcommand
 import kotlinx.cli.default
 import kotlinx.cli.multiple
 import kotlinx.cli.required
+import kotlin.reflect.KClass
+import java.util.jar.Manifest as Manifest
+
+fun getVersion() = KClass::class.java.getResourceAsStream("/META-INF/MANIFEST.MF").use { inputStream ->
+    val mf = Manifest(inputStream)
+    mf.mainAttributes.getValue("Implementation-Version")
+} ?: ""
 
 @ExperimentalCli
 fun main(args: Array<String>) {
-    val parser = ArgParser("Sky Warehouse")
+    val parser = ArgParser("SkyWarehouse ${getVersion()}")
     val bucketName: String by parser.option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
     val verbose: Boolean by parser.option(ArgType.Boolean, shortName = "v", description = "Verbose log").default(false)
     lateinit var logger: Logger
