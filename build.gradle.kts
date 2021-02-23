@@ -70,15 +70,21 @@ tasks.shadowJar {
     minimize()
 }
 
-distributions {
-    create("archive") {
-        // Set archive name to skw-$version.(tar|zip)
-        distributionBaseName.set("skw")
-        // Copy lib/ and bin/ directory that made by shadow
-        contents {
-            from(tasks["installShadowDist"].outputs)
-        }
-    }
+// ---- Crate tar and zip
+
+val archiveTarTask = tasks.register<Tar>("archiveTar") {
+    archiveFileName.set("${project.name}.tar")
+    from(tasks["installShadowDist"].outputs)
+    into("${project.name}")
+}
+val archiveZipTask = tasks.register<Zip>("archiveZip") {
+    archiveFileName.set("${project.name}.zip")
+    from(tasks["installShadowDist"].outputs)
+    into("${project.name}")
+}
+tasks.register("archive") {
+    dependsOn(archiveTarTask)
+    dependsOn(archiveZipTask)
 }
 
 // ---- Test and check
