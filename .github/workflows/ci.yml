@@ -31,7 +31,7 @@ jobs:
 
     # Execute
     - name: Build with Gradle
-      run: ./gradlew assembleArchiveDist test --profile
+      run: ./gradlew assembleArchive test --profile
 
     # Post
     - uses: actions/upload-artifact@v2

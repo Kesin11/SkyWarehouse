@@ -51,13 +51,18 @@ dependencyLocking {
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.languageVersion = "1.4"
 }
 
 // ---- Create jar archives
 
-tasks.named("shadowJar", ShadowJar::class.java) {
+tasks.shadowJar {
     manifest {
-        attributes["Main-Class"] = "MainKt"
+        attributes(
+            "Main-Class" to "MainKt",
+            "Implementation-Title" to "SkyWarehouse",
+            "Implementation-Version" to project.version.toString()
+        )
     }
     archiveBaseName.set("skw")
     archiveClassifier.set("")
@@ -65,16 +70,32 @@ tasks.named("shadowJar", ShadowJar::class.java) {
     minimize()
 }
 
-distributions {
-    create("archive") {
-        // Set archive name to skw.(tar|zip)
-        distributionBaseName.set("skw")
-        version = ""
-        // Copy lib/ and bin/ directory that made by shadow
-        contents {
-            from(tasks["installShadowDist"].outputs)
-        }
-    }
+// ---- Crate tar and zip
+
+val ARCHIVE_GROUP = "Archive"
+val archiveTarTask = tasks.register<Tar>("archiveTar") {
+    group = ARCHIVE_GROUP
+    description = "Bundles jar and executable scripts"
+
+    archiveFileName.set("${project.name}.tar")
+    from(tasks["installShadowDist"].outputs)
+    into("${project.name}")
+}
+val archiveZipTask = tasks.register<Zip>("archiveZip") {
+    group = ARCHIVE_GROUP
+    description = "Bundles jar and executable scripts"
+
+    archiveFileName.set("${project.name}.zip")
+    from(tasks["installShadowDist"].outputs)
+    into("${project.name}")
+}
+val assembleArchiveTask = tasks.register("assembleArchive") {
+    group = ARCHIVE_GROUP
+    description = "Assembles the archive"
+    dependsOn(archiveTarTask, archiveZipTask)
+}
+tasks.assemble {
+    dependsOn(assembleArchiveTask)
 }
 
 // ---- Test and check
