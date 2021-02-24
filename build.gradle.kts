@@ -72,19 +72,30 @@ tasks.shadowJar {
 
 // ---- Crate tar and zip
 
+val ARCHIVE_GROUP = "Archive"
 val archiveTarTask = tasks.register<Tar>("archiveTar") {
+    group = ARCHIVE_GROUP
+    description = "Bundles jar and executable scripts"
+
     archiveFileName.set("${project.name}.tar")
     from(tasks["installShadowDist"].outputs)
     into("${project.name}")
 }
 val archiveZipTask = tasks.register<Zip>("archiveZip") {
+    group = ARCHIVE_GROUP
+    description = "Bundles jar and executable scripts"
+
     archiveFileName.set("${project.name}.zip")
     from(tasks["installShadowDist"].outputs)
     into("${project.name}")
 }
-tasks.register("archive") {
-    dependsOn(archiveTarTask)
-    dependsOn(archiveZipTask)
+val assembleArchiveTask = tasks.register("assembleArchive") {
+    group = ARCHIVE_GROUP
+    description = "Assembles the archive"
+    dependsOn(archiveTarTask, archiveZipTask)
+}
+tasks.assemble {
+    dependsOn(assembleArchiveTask)
 }
 
 // ---- Test and check
