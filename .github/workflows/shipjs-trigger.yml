@@ -5,7 +5,7 @@ on:
       - closed
 jobs:
   build:
-    name: Release
+    name: Create Github Releases and push tag
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'releases/v')
     steps:
@@ -14,31 +14,16 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          # Workaround for trigger 'push tag' workflow
+          # see: https://github.community/t/action-does-not-trigger-another-on-push-tag-action/17148/4
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: actions/setup-node@v2
         with:
           registry-url: "https://registry.npmjs.org"
 
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-      - name: Restore and export service account to ENV for GCS remote cache
-        run: |
-          echo $GCS_SERVICE_ACCOUNT | base64 --decode --ignore-garbage > service.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=service.json" >> $GITHUB_ENV
-        if: env.GCS_SERVICE_ACCOUNT
-        env:
-          GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
-
-      # execute
       - run: npx shipjs trigger
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           # SLACK_INCOMING_HOOK: ${{ secrets.SLACK_INCOMING_HOOK }}
+  # Shipjs create new git tag and push. It triggers next workflow.
