@@ -1,4 +1,4 @@
-# [](https://github.com/Kesin11/SkyWarehouse/compare/v0.1.0...v) (2021-03-07)
+# [v0.1.1](https://github.com/Kesin11/SkyWarehouse/compare/v0.1.0...v0.1.1) (2021-03-07)
 
 
 ### Bug Fixes
