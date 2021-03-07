@@ -1,0 +1,44 @@
+name: Ship js trigger
+on:
+  pull_request:
+    types:
+      - closed
+jobs:
+  build:
+    name: Release
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'releases/v')
+    steps:
+      # prepare
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: main
+      - uses: actions/setup-node@v2
+        with:
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Restore and export service account to ENV for GCS remote cache
+        run: |
+          echo $GCS_SERVICE_ACCOUNT | base64 --decode --ignore-garbage > service.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=service.json" >> $GITHUB_ENV
+        if: env.GCS_SERVICE_ACCOUNT
+        env:
+          GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
+
+      # execute
+      - run: npx shipjs trigger
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          # SLACK_INCOMING_HOOK: ${{ secrets.SLACK_INCOMING_HOOK }}
