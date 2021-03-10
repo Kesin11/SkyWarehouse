@@ -63,14 +63,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: github_releases
     steps:
-      - run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Extract version
+        id: extract-version
+        run: |
+          printf "::set-output name=%s::%s\n" tag-name "${GITHUB_REF#refs/tags/}"
       - uses: mislav/bump-homebrew-formula-action@v1
         with:
           formula-name: skw
           formula-path: Formula/skw.rb
           homebrew-tap: Kesin11/homebrew-tap
           base-branch: main
-          download-url: "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GIT_TAG}/skw.jar"
+          download-url: "https://github.com/Kesin11/SkyWarehouse/releases/download/${{ steps.extract-version.outputs.tag-name }}/skw.jar"
           commit-message: |
             {{formulaName}} {{version}}
 
