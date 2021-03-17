@@ -25,6 +25,15 @@ internal class PathUtilKtTest {
 
     @Nested
     class TestResolvePathsOrGlob {
+        private val ktPathsFixture = listOf(
+            Paths.get("sample", "foo.kt"),
+            Paths.get("sample", "bar.kt"),
+        )
+        private val nestJavaPathsFixture = listOf(
+            Paths.get("sample", "nest", "foo.java"),
+            Paths.get("sample", "nest", "bar.java"),
+        )
+
         @Test
         fun unixPaths() {
             val actual = resolvePathsOrGlob(listOf("sample/foo.kt", "sample/bar.kt"))
@@ -54,18 +63,13 @@ internal class PathUtilKtTest {
         fun globMatch() {
             val rootDirPath = Paths.get(".")
             mockkStatic(::filesWalk)
-            every { filesWalk(rootDirPath) } returns listOf(
-                Paths.get("sample", "foo.kt"),
-                Paths.get("sample", "bar.kt"),
-                Paths.get("sample", "bar.java")
+            every { filesWalk(rootDirPath) } returns (
+                ktPathsFixture + nestJavaPathsFixture
             ).stream()
 
             val actual = resolvePathsOrGlob(listOf("**/*.kt"))
             assertEquals(
-                listOf(
-                    Paths.get("sample", "foo.kt"),
-                    Paths.get("sample", "bar.kt")
-                ),
+                ktPathsFixture,
                 actual
             )
         }
