@@ -9,37 +9,33 @@ fun filesWalk(rootDir: Path): Stream<Path> {
     return Files.walk(rootDir)
 }
 
-// パスの配列かglobの1パターンをList<Path>に正規化する
-// CLIのオプションにファイルパスを渡す場合、"*"などのワイルドカードはシェルがパスを複数の引数に展開してくる
-// "**/*"などシェルが展開できなかった場合は単純に文字列となる
-// この違いを吸収する
-fun resolvePathsOrGlob(pathsOrGlob: List<String>): List<Path> {
-    if (pathsOrGlob.isEmpty()) {
+fun resolvePathOrGlobList(pathOrGlobList: List<String>): List<Path> {
+    if (pathOrGlobList.isEmpty()) {
         throw IllegalArgumentException("Path or glob is empty.")
     }
-    // シェルがパスを展開したケース
-    else if (pathsOrGlob.none { it.contains("*") }) {
-        return pathsOrGlob.map { Paths.get(it).normalize() }
-    }
+    // Paths that already expanded by shell
+    val paths = pathOrGlobList
+        .filterNot { it.contains("*") }
+        .map { Paths.get(it).normalize() }
 
-    if (pathsOrGlob.size > 1) {
-        throw IllegalArgumentException("Multiple grobs does not supported.")
-    }
+    // Paths that contain double wildcard (ex: **/*.java)
+    val expandedPaths = pathOrGlobList
+        .filter { it.contains("*") }
+        .flatMap { it ->
+            val glob = normalizeGlob(it)
+            val rootDirPath = globRootDirPath(glob)
+            val matcher = FileSystems.getDefault().getPathMatcher("glob:$glob")
+            filesWalk(rootDirPath)
+                .filter(matcher::matches)
+                .collect(Collectors.toList())
+                .toList()
+        }
 
-    // 引数がglobの文字列として解釈されたケース
-    val glob = pathsOrGlob.first()
-    val rootDirPath = globRootDirPath(glob)
-
-    val matcher = FileSystems.getDefault().getPathMatcher("glob:$glob")
-    return filesWalk(rootDirPath)
-        .filter(matcher::matches)
-        .collect(Collectors.toList())
-        .toList()
+    return paths.union(expandedPaths).toList()
 }
 
+// Paths.get() can not parse when path has wildcard, so this func parse it using own process
 fun globRootDirPath(glob: String): Path {
-    // wildcardが含まれているとPaths.getがパースできないので自前で分解する
-    // walkのコストを抑えるため、ワイルドカードより0つ上のディレクトリをrootにする
     val globStrings = glob.split("/")
     val rootDirStrings = globStrings.map { it }.takeWhile { !it.contains("*") }
     return when (rootDirStrings.isEmpty()) {
@@ -48,6 +44,10 @@ fun globRootDirPath(glob: String): Path {
     }
 }
 
-fun getLocalFilePaths(pathsOrGlob: List<String>): List<Path> {
-    return resolvePathsOrGlob(pathsOrGlob).filter { p -> p.toFile().isFile }
+fun getLocalFilePaths(pathOrGlobList: List<String>): List<Path> {
+    return resolvePathOrGlobList(pathOrGlobList).filter { p -> p.toFile().isFile }
+}
+
+fun normalizeGlob(glob: String): String {
+    return glob.replaceFirst(Regex("^\\./"), "")
 }

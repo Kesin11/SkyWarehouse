@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
     lateinit var logger: Logger
 
     class UploadCommand : Subcommand("upload", "Upload files to cloud storage and register index key and tags") {
-        val pathsOrGlob: List<String> by argument(ArgType.String, description = "Paths or file glob").multiple(10000)
+        val pathOrGlobList: List<String> by argument(ArgType.String, description = "Paths or file glob").multiple(10000)
         val key: String by option(ArgType.String, shortName = "k", description = "Key").required()
         val tags: List<String> by option(
             ArgType.String,
@@ -34,12 +34,12 @@ fun main(args: Array<String>) {
             // Upload
             runCatching {
                 val storage = Storage(bucketName, logger)
-                storage.upload(pathsOrGlob, key, tags, prefix)
+                storage.upload(pathOrGlobList, key, tags, prefix)
             }.onSuccess { blobs ->
                 logger.log("Success upload to remote:")
                 logger.log(blobs.joinToString("\n") { it.name })
             }.onFailure {
-                logger.warn("Failed upload $pathsOrGlob. Error:")
+                logger.warn("Failed upload $pathOrGlobList. Error:")
                 logger.warn(it)
                 logger.warn(it.stackTraceToString())
                 kotlin.system.exitProcess(1)

@@ -10,11 +10,10 @@ import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.IllegalArgumentException
+import java.util.stream.Stream
 import kotlin.test.assertEquals
 
 internal class PathUtilKtTest {
-
     @BeforeEach
     fun setUp() {
     }
@@ -25,9 +24,28 @@ internal class PathUtilKtTest {
 
     @Nested
     class TestResolvePathsOrGlob {
+        private val ktPathsFixture = listOf(
+            Paths.get("sample", "foo.kt"),
+            Paths.get("sample", "bar.kt"),
+        )
+        private val nestJavaPathsFixture = listOf(
+            Paths.get("sample", "nest", "foo.java"),
+            Paths.get("sample", "nest", "bar.java"),
+        )
+        private fun createPathsFixtureStream(): Stream<Path> {
+            return (ktPathsFixture + nestJavaPathsFixture).stream()
+        }
+
+        @Test
+        fun emptyPath() {
+            assertThrows<IllegalArgumentException>("Paths or glob is empty.") {
+                resolvePathOrGlobList(listOf())
+            }
+        }
+
         @Test
         fun unixPaths() {
-            val actual = resolvePathsOrGlob(listOf("sample/foo.kt", "sample/bar.kt"))
+            val actual = resolvePathOrGlobList(listOf("sample/foo.kt", "sample/bar.kt"))
             assertEquals(
                 listOf(
                     Paths.get("sample", "foo.kt"),
@@ -40,7 +58,7 @@ internal class PathUtilKtTest {
         @Test
         @EnabledOnOs(OS.WINDOWS)
         fun windowsPaths() {
-            val actual = resolvePathsOrGlob(listOf("sample\\foo.kt", "sample\\bar.kt"))
+            val actual = resolvePathOrGlobList(listOf("sample\\foo.kt", "sample\\bar.kt"))
             assertEquals(
                 listOf(
                     Paths.get("sample", "foo.kt"),
@@ -54,18 +72,11 @@ internal class PathUtilKtTest {
         fun globMatch() {
             val rootDirPath = Paths.get(".")
             mockkStatic(::filesWalk)
-            every { filesWalk(rootDirPath) } returns listOf(
-                Paths.get("sample", "foo.kt"),
-                Paths.get("sample", "bar.kt"),
-                Paths.get("sample", "bar.java")
-            ).stream()
+            every { filesWalk(rootDirPath) } answers { createPathsFixtureStream() }
 
-            val actual = resolvePathsOrGlob(listOf("**/*.kt"))
+            val actual = resolvePathOrGlobList(listOf("**/*.kt"))
             assertEquals(
-                listOf(
-                    Paths.get("sample", "foo.kt"),
-                    Paths.get("sample", "bar.kt")
-                ),
+                ktPathsFixture,
                 actual
             )
         }
@@ -74,29 +85,36 @@ internal class PathUtilKtTest {
         fun globMatchNoting() {
             val rootDirPath = Paths.get(".")
             mockkStatic(::filesWalk)
-            every { filesWalk(rootDirPath) } returns listOf(
-                Paths.get("sample", "foo.kt"),
-                Paths.get("sample", "bar.kt"),
-                Paths.get("sample", "bar.java")
-            ).stream()
+            every { filesWalk(rootDirPath) } answers { createPathsFixtureStream() }
 
-            val actual = resolvePathsOrGlob(listOf("**/noting"))
-            assertEquals(listOf<Path>(), actual)
+            val actual = resolvePathOrGlobList(listOf("**/noting"))
+            assertEquals(listOf(), actual)
         }
 
         @Test
-        fun globMultiThrowsError() {
+        fun globMulti() {
             val rootDirPath = Paths.get(".")
             mockkStatic(::filesWalk)
-            every { filesWalk(rootDirPath) } returns listOf(
-                Paths.get("sample", "foo.kt"),
-                Paths.get("sample", "bar.kt"),
-                Paths.get("sample", "bar.java")
-            ).stream()
+            every { filesWalk(rootDirPath) } answers { createPathsFixtureStream() }
 
-            assertThrows<IllegalArgumentException>("Multiple globs does not supported") {
-                resolvePathsOrGlob(listOf("**/first", "**/second"))
-            }
+            val actual = resolvePathOrGlobList(listOf("**/*.kt", "**/*.java"))
+            assertEquals(
+                ktPathsFixture + nestJavaPathsFixture,
+                actual
+            )
+        }
+
+        @Test
+        fun combinePathsAndGlobs() {
+            val rootDirPath = Paths.get(".")
+            mockkStatic(::filesWalk)
+            every { filesWalk(rootDirPath) } answers { createPathsFixtureStream() }
+
+            val actual = resolvePathOrGlobList(listOf("sample/foo.kt", "sample/bar.kt", "**/*.java"))
+            assertEquals(
+                ktPathsFixture + nestJavaPathsFixture,
+                actual
+            )
         }
     }
 
@@ -121,6 +139,16 @@ internal class PathUtilKtTest {
         fun multiPrefix() {
             val actual = globRootDirPath("sample/foo/**/*.kt")
             assertEquals(Paths.get("sample", "foo"), actual)
+        }
+    }
+
+    @Nested
+    class TestNormalizeGlob {
+        @Test
+        @DisplayName("./**/*")
+        fun redundantPrefix() {
+            val actual = normalizeGlob("./**/*")
+            assertEquals("**/*", actual)
         }
     }
 }

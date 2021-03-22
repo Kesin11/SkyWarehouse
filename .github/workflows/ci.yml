@@ -2,8 +2,6 @@ name: CI
 
 on:
   push:
-    branches:
-    - "*"
     paths-ignore:
     - '**.md'
 
@@ -98,8 +96,8 @@ jobs:
             -b "$BUCKET" \
             -k "$KEY" \
             -p "java${{ matrix.java }}" \
-            -t "${{ github.sha }}-java${{ matrix.java }}" -t "java${{ matrix.java }}" \
-            ./github_actions/**/*.txt
+            -t "${{ github.sha }}-java${{ matrix.java }}-nest" -t "java${{ matrix.java }}" \
+            ./github_actions/*.txt ./github_actions/**/*.txt
       - name: list keys
         run: |
           ./skw/bin/skw keys \
