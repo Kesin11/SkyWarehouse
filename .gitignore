@@ -150,3 +150,10 @@ gradle-app.setting
 **/build/
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,intellij,gradle
+
+# From Intelij 2021_1
+.idea/misc.xml
+.idea/modules.xml
+.idea/modules/
+.idea/.name
+.idea/libraries-with-intellij-classes.xml
