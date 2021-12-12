@@ -8,7 +8,7 @@ plugins {
     kotlin("plugin.serialization") version "1.4.10"
 
     // For create fatjar with ":shadowJar"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.0"
 
     id("org.jlleitschuh.gradle.ktlint") version "9.4.1"
 }
@@ -17,7 +17,7 @@ group = "com.kesin11"
 version = "0.1.2"
 
 application {
-    mainClassName = "MainKt"
+    mainClass.set("MainKt")
 }
 
 // ---- Dependencies
