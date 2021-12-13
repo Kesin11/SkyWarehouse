@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "1.6.0"
     application
 
     kotlin("plugin.serialization") version "1.4.10"
@@ -52,7 +52,7 @@ dependencyLocking {
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.languageVersion = "1.5"
+    kotlinOptions.languageVersion = "1.6"
 }
 
 // ---- Create jar archives
