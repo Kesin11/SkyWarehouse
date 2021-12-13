@@ -29,9 +29,9 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test-junit5"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
-    testImplementation("io.mockk:mockk:1.10.6")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testImplementation("io.mockk:mockk:1.12.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.1")
