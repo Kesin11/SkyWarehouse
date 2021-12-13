@@ -6,10 +6,8 @@ plugins {
     kotlin("plugin.serialization") version "1.6.0"
     application
 
-
     // For create fatjar with ":shadowJar"
     id("com.github.johnrengelman.shadow") version "7.1.0"
-
     id("org.jlleitschuh.gradle.ktlint") version "9.4.1"
 }
 
@@ -32,14 +30,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
     testImplementation("io.mockk:mockk:1.12.1")
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.3")
-
-    val ktorVersion = "1.4.0"
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-
     implementation("com.google.cloud:google-cloud-storage:1.113.6")
 }
 
