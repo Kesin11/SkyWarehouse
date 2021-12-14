@@ -11,15 +11,11 @@ jobs:
       # Prepare
       - uses: actions/checkout@v2
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
+          distribution: 'adopt'
           java-version: 16
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          cache: 'gradle'
       - name: Restore and export service account to ENV for GCS remote cache
         run: |
           echo $GCS_SERVICE_ACCOUNT | base64 --decode --ignore-garbage > service.json
