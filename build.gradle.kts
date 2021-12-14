@@ -2,14 +2,12 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm") version "1.6.0"
+    kotlin("plugin.serialization") version "1.6.0"
     application
-
-    kotlin("plugin.serialization") version "1.4.10"
 
     // For create fatjar with ":shadowJar"
     id("com.github.johnrengelman.shadow") version "7.1.0"
-
     id("org.jlleitschuh.gradle.ktlint") version "9.4.1"
 }
 
@@ -29,29 +27,26 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test-junit5"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
-    testImplementation("io.mockk:mockk:1.10.6")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testImplementation("io.mockk:mockk:1.12.1")
 
-    val ktorVersion = "1.4.0"
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.3")
     implementation("com.google.cloud:google-cloud-storage:1.113.6")
 }
 
 dependencyLocking {
     lockAllConfigurations()
+    lockMode.set(LockMode.STRICT)
 }
 
 // ---- Kotlin
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.languageVersion = "1.4"
+    kotlinOptions.languageVersion = "1.6"
 }
 
 // ---- Create jar archives
