@@ -138,20 +138,7 @@ runtime {
         installerOptions = listOf("--install-dir", "/usr/local")
     }
 }
-
-val copyAndRenameJarTask = tasks.register<Copy>("copyAndRenameJar") {
-    group = ARCHIVE_GROUP
-    description = "Copy and rename shadow jar to skw.jar"
-    outputs.upToDateWhen { false }
-
-    from(tasks["shadowJar"].outputs)
-    include("*-all.jar")
-    rename(".+-all.jar", "${rootProject.name}.jar")
-    into(layout.buildDirectory.dir("distributions"))
-}
-
-// ---- Crate tar and zip
-
+// ---- Aggregate artifacts and copy to "distributions" directory
 val ARCHIVE_GROUP = "Archive"
 val archiveTarTask = tasks.register<Tar>("archiveTar") {
     group = ARCHIVE_GROUP
@@ -169,10 +156,30 @@ val archiveZipTask = tasks.register<Zip>("archiveZip") {
     from(tasks["installShadowDist"].outputs)
     into("${project.name}")
 }
+val archiveShadowJarTask = tasks.register<Copy>("archiveShadowJar") {
+    group = ARCHIVE_GROUP
+    description = "Copy and rename shadow jar to skw.jar"
+    outputs.upToDateWhen { false }
+
+    from(tasks["shadowJar"].outputs)
+    include("*-all.jar")
+    rename(".+-all.jar", "${rootProject.name}.jar")
+    into(layout.buildDirectory.dir("distributions"))
+}
+val archiveJpackageTask = tasks.register<Copy>("archiveJpackageJar") {
+    group = ARCHIVE_GROUP
+    description = "Copy jpackage output into distributions"
+    outputs.upToDateWhen { false }
+
+    from(tasks["jpackage"].outputs)
+    include("*.deb")
+    into(layout.buildDirectory.dir("distributions"))
+    rename("skw_.+_amd64\\.deb", "skw_amd64.deb")
+}
 val assembleArchiveTask = tasks.register("assembleArchive") {
     group = ARCHIVE_GROUP
     description = "Assembles the archive"
-    dependsOn(archiveTarTask, archiveZipTask, copyAndRenameJarTask)
+    dependsOn(archiveTarTask, archiveZipTask, archiveShadowJarTask, archiveJpackageTask)
 }
 tasks.assemble {
     dependsOn(assembleArchiveTask)
