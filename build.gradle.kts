@@ -59,10 +59,17 @@ tasks.shadowJar {
             "Implementation-Version" to project.version.toString()
         )
     }
-    archiveBaseName.set("skw")
-    archiveClassifier.set("")
-    archiveVersion.set("")
     minimize()
+}
+val copyAndRenameJarTask = tasks.register<Copy>("copyAndRenameJar") {
+    group = ARCHIVE_GROUP
+    description = "Copy and rename shadow jar to skw.jar"
+    outputs.upToDateWhen { false }
+
+    from(tasks["shadowJar"].outputs)
+    include("*-all.jar")
+    rename(".+-all.jar", "${rootProject.name}.jar")
+    into(layout.buildDirectory.dir("distributions"))
 }
 
 // ---- Crate tar and zip
@@ -87,7 +94,7 @@ val archiveZipTask = tasks.register<Zip>("archiveZip") {
 val assembleArchiveTask = tasks.register("assembleArchive") {
     group = ARCHIVE_GROUP
     description = "Assembles the archive"
-    dependsOn(archiveTarTask, archiveZipTask)
+    dependsOn(archiveTarTask, archiveZipTask, copyAndRenameJarTask)
 }
 tasks.assemble {
     dependsOn(assembleArchiveTask)
