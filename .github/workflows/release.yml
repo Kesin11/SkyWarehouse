@@ -48,9 +48,7 @@ jobs:
       - name: Upload assets
         run: |
           gh release upload --clobber "${GITHUB_REF#refs/*/}" \
-            libs/skw.jar \
-            distributions/skw.tar \
-            distributions/skw.zip
+            distributions/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -143,4 +143,4 @@ jobs:
             -k "dogfooding" \
             -t "${{ github.sha }}" -t "latest" \
             -p "dogfooding/${{ github.run_number }}" \
-            ./libs/skw.jar
+            ./distributions/skw.jar
