@@ -16,7 +16,7 @@ fun getVersion() = KClass::class.java.getResourceAsStream("/META-INF/MANIFEST.MF
 @ExperimentalCli
 fun main(args: Array<String>) {
     val parser = ArgParser("SkyWarehouse ${getVersion()}")
-    val bucketName: String by parser.option(ArgType.String, shortName = "b", description = "GCS bucket name").required()
+    val bucketPath: String by parser.option(ArgType.String, shortName = "b", description = "GCS bucket path (gs://XXXX)").required()
     val verbose: Boolean by parser.option(ArgType.Boolean, shortName = "v", description = "Verbose log").default(false)
     lateinit var logger: Logger
 
@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
             logger = Logger(verbose)
             // Upload
             runCatching {
-                val storage = Storage(bucketName, logger)
+                val storage = Storage(bucketPath, logger)
                 storage.upload(pathOrGlobList, key, tags, prefix)
             }.onSuccess { blobs ->
                 logger.log("Success upload to remote:")
@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
             logger = Logger(verbose)
             // Download
             runCatching {
-                val storage = Storage(bucketName, logger)
+                val storage = Storage(bucketPath, logger)
                 storage.download(path, key, tag)
             }.onSuccess { paths ->
                 logger.log("Success download key: $key, tag: $tag")
@@ -80,7 +80,7 @@ fun main(args: Array<String>) {
         override fun execute() {
             logger = Logger(verbose)
             runCatching {
-                val storage = Storage(bucketName, logger)
+                val storage = Storage(bucketPath, logger)
                 storage.listKeys(prefix)
             }.onSuccess {
                 logger.log(it.joinToString("\n"))
@@ -99,7 +99,7 @@ fun main(args: Array<String>) {
         override fun execute() {
             logger = Logger(verbose)
             runCatching {
-                val storage = Storage(bucketName, logger)
+                val storage = Storage(bucketPath, logger)
                 storage.listTags(key)
             }.onSuccess {
                 logger.log(it.joinToString("\n"))

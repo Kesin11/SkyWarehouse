@@ -78,7 +78,7 @@ jobs:
         run: |
           .github/workflows/integration_test.sh \
             -s ./skw/bin/skw \
-            -b "kesin11_bazel_cache" \
+            -b "gs://kesin11_bazel_cache" \
             -k "github_actions" \
             -p "java${{ matrix.java }}" \
             -t "java${{ matrix.java }}"
@@ -111,7 +111,7 @@ jobs:
       - name: Upload own jar to GCS
         run: |
           skw upload \
-            -b "kesin11_bazel_cache" \
+            -b "gs://kesin11_bazel_cache" \
             -k "dogfooding" \
             -t "${{ github.sha }}" -t "latest" \
             -p "dogfooding/${{ github.run_number }}" \

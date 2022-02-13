@@ -17,6 +17,7 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.test.assertEquals
 
 internal class StorageTest {
     private lateinit var bucketMock: Bucket
@@ -82,6 +83,22 @@ internal class StorageTest {
             assertThrows<StorageException> {
                 storage.upload(pathsOrGlob, key, tags, prefix)
             }
+        }
+
+        @Test
+        fun whenValidBucketPath() {
+            assertEquals(
+                true,
+                storage.verifyBucketPath("gs://valid_bucket"),
+            )
+        }
+
+        @Test
+        fun whenInvalidBucketPath() {
+            assertEquals(
+                false,
+                storage.verifyBucketPath("invalid_bucket"),
+            )
         }
     }
 
