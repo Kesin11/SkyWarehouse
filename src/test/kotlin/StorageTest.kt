@@ -86,18 +86,18 @@ internal class StorageTest {
         }
 
         @Test
-        fun whenValidBucketName() {
+        fun whenValidBucketPath() {
             assertEquals(
                 true,
-                storage.verifyBucketName("gs://valid_bucket"),
+                storage.verifyBucketPath("gs://valid_bucket"),
             )
         }
 
         @Test
-        fun whenInvalidBucketName() {
+        fun whenInvalidBucketPath() {
             assertEquals(
                 false,
-                storage.verifyBucketName("invalid_bucket"),
+                storage.verifyBucketPath("invalid_bucket"),
             )
         }
     }

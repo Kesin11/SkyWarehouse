@@ -23,8 +23,9 @@ class Storage {
         this.logger = logger
     }
 
-    constructor(bucketName: String, logger: Logger) {
-        if (!this.verifyBucketName(bucketName)) throw IllegalArgumentException("bucketName must be start with gs://")
+    constructor(bucketPath: String, logger: Logger) {
+        if (!this.verifyBucketPath(bucketPath)) throw IllegalArgumentException("bucketPath must be start with gs://")
+        val bucketName = bucketPath.removePrefix("gs://")
 
         this.logger = logger
         val storage = StorageOptions.getDefaultInstance().service
@@ -38,8 +39,8 @@ class Storage {
         }
     }
 
-     internal fun verifyBucketName(bucketName: String): Boolean {
-        return (bucketName.startsWith("gs://"))
+     internal fun verifyBucketPath(bucketPath: String): Boolean {
+        return (bucketPath.startsWith("gs://"))
     }
 
     fun upload(pathsOrGlob: List<String>, key: String, tags: List<String>, prefixPath: String?): List<Blob> {
