@@ -114,9 +114,10 @@ jobs:
       - name: list got files
         run: ls down/**
 
-  dogfooding:
+  dogfooding_deb:
     runs-on: ubuntu-latest
     needs: build
+    container: "ubuntu:latest"
     env:
       GOOGLE_APPLICATION_CREDENTIALS: service.json
     steps:
@@ -125,20 +126,20 @@ jobs:
         env:
           GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
         run: echo $GCS_SERVICE_ACCOUNT | base64 --decode --ignore-garbage > service.json
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: 8
       - uses: actions/download-artifact@v2
         with:
           name: artifacts
-      - run: tar -xvf distributions/skw.tar
+      - name: Install skw from .deb
+        run: |
+          apt update
+          apt install -y ./distributions/skw_amd64.deb
 
       # Execute
+      - name: Check installed path
+        run: which skw | grep "/usr/local/bin/skw"
       - name: Upload own jar to GCS
         run: |
-          ./skw/bin/skw upload \
+          skw upload \
             -b "kesin11_bazel_cache" \
             -k "dogfooding" \
             -t "${{ github.sha }}" -t "latest" \
