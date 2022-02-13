@@ -53,13 +53,12 @@ jobs:
     needs: build
     env:
       GOOGLE_APPLICATION_CREDENTIALS: service.json
-      KEY: "github_actions"
-      BUCKET: "kesin11_bazel_cache"
     strategy:
       matrix:
         java: [8, 11, 16]
     steps:
       # Prepare
+      - uses: actions/checkout@v2
       - name: Decrypt service account json
         env:
           GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
@@ -75,44 +74,16 @@ jobs:
       - run: tar -xvf distributions/skw.tar
 
       # Integrate test
-      - run: |
-          mkdir -p github_actions/nest
-          echo ${{ github.sha }} > github_actions/${{ github.run_number }}.txt
-          echo ${{ github.sha }} > github_actions/nest/${{ github.run_number }}.txt
-      - name: Upload wildcard paths
+      - name: Run integratation test script
         run: |
-          ./skw/bin/skw upload \
-            -b "$BUCKET" \
-            -k "$KEY" \
+          .github/workflows/integration_test.sh \
+            -s ./skw/bin/skw \
+            -b "kesin11_bazel_cache" \
+            -k "github_actions" \
             -p "java${{ matrix.java }}" \
-            -t "${{ github.sha }}-java${{ matrix.java }}" -t "java${{ matrix.java }}" \
-            ./github_actions/*.txt
-      - name: Upload glob paths
-        run: |
-          ./skw/bin/skw upload \
-            -b "$BUCKET" \
-            -k "$KEY" \
-            -p "java${{ matrix.java }}" \
-            -t "${{ github.sha }}-java${{ matrix.java }}-nest" -t "java${{ matrix.java }}" \
-            ./github_actions/*.txt ./github_actions/**/*.txt
-      - name: list keys
-        run: |
-          ./skw/bin/skw keys \
-            -b "$BUCKET" \
-      - name: list tags
-        run: |
-          ./skw/bin/skw tags \
-            -b "$BUCKET" \
-            "$KEY"
-      - name: Download
-        run: |
-          ./skw/bin/skw download \
-            -b "$BUCKET" \
-            -k "$KEY" \
-            -t "${{ github.sha }}-java${{ matrix.java }}" \
-            ./down
-      - name: list got files
-        run: ls down/**
+            -t "java${{ matrix.java }}"
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
 
   dogfooding_deb:
     runs-on: ubuntu-latest
