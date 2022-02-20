@@ -1,5 +1,7 @@
-# [](https://github.com/Kesin11/SkyWarehouse/compare/v0.1.2...v) (2022-02-20)
+# [v0.2.0](https://github.com/Kesin11/SkyWarehouse/compare/v0.1.2...v0.2.0) (2022-02-20)
 
+### BREAKING CHANGES
+* `--bucket` needs 'gs://' prefix ([641a621](https://github.com/Kesin11/SkyWarehouse/pull/28/commits/641a62123ab21716a0ccf3c04186e86c5bba83bc))
 
 ### Bug Fixes
 
