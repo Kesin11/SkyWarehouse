@@ -1,3 +1,18 @@
+# [](https://github.com/Kesin11/SkyWarehouse/compare/v0.1.2...v) (2022-02-20)
+
+
+### Bug Fixes
+
+* Bugfix create bucketName from bucketPath ([cb4970e](https://github.com/Kesin11/SkyWarehouse/commit/cb4970e3c94bf9f5d1c4c10be24ec810434c2ecb))
+
+
+### Features
+
+* Create .deb package ([2c79224](https://github.com/Kesin11/SkyWarehouse/commit/2c792247c3d30f8ec20b637821b54d92d96349fb))
+* Upload command supports multi path and glob ([8e5cae5](https://github.com/Kesin11/SkyWarehouse/commit/8e5cae542c8d49c9a3d657c9d1145de6bf3cae1f))
+
+
+
 # [v0.1.2](https://github.com/Kesin11/SkyWarehouse/compare/v0.1.1...v0.1.2) (2021-03-07)
 
 
